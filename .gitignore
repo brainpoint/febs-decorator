@@ -1,0 +1,13 @@
+.DS_Store
+_dist
+
+# IDE
+#
+.vscode
+
+# node.js
+#
+.nyc_output
+node_modules
+npm-debug.log
+package-lock.json

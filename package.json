@@ -1,0 +1,53 @@
+{
+  "description": "Some typescript decorator which use in front-end and back-end",
+  "dependencies": {
+    "febs-browser": "^1.0.9",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^14.11.8",
+    "@types/tap": "^14.10.1",
+    "tap": "^14.10.8"
+  },
+  "directories": {},
+  "homepage": "https://github.com/brainpoint/febs-decorator#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/brainpoint/febs-decorator.git"
+  },
+  "scripts": {
+    "test": "tsc --build tsconfig.json && tap _dist/test/*.js"
+  },
+  "keywords": [
+    "decorator"
+  ],
+  "engines": {
+    "node": ">=8"
+  },
+  "files": [
+    "doc",
+    "browser/common",
+    "browser/libs",
+    "browser/dist",
+    "browser/index.js",
+    "browser/third-party",
+    "browser/wxmini",
+    "browser/index.js",
+    "server",
+    "test",
+    "types",
+    "index.js"
+  ],
+  "license": "MIT",
+  "main": "./index.js",
+  "miniprogram": "./browser/dist/wxmini",
+  "types": "./types/index.d.ts",
+  "maintainers": [
+    {
+      "name": "brainpoint",
+      "email": "bpoint.lee@gmail.com"
+    }
+  ],
+  "name": "febs-decorator",
+  "version": "0.0.0"
+}
