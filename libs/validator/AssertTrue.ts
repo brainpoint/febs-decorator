@@ -9,21 +9,25 @@
 
 import * as febs from 'febs-browser'
 import {
-  MetadataKey_AssertTrue as MetadataKey,
-  MetadataKey_AssertTrueList as MetadataKeyList,
-  _validate_set_property_matedata,
-  _validate_set_property_matedata_list,
+  verifyPropertyList,
+  doPropertyDecorator,
+  getPropertyDecorator,
+
 } from './validatorUtils'
 
-function validate(param: any, decoratorData: any): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+function verify(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (param !== true && param !== 'true' && param !== 1) {
-    return { r: false }
+  if (propertyValue !== true && propertyValue !== 'true' && propertyValue !== 1) {
+    return { isValid: false }
   }
 
-  return { v: true }
+  return { propertyValue: true }
+}
+
+function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, verify);
 }
 
 function DecoratorList(cfg?: {
@@ -33,24 +37,9 @@ function DecoratorList(cfg?: {
 function DecoratorList(target: Object, propertyKey: string | symbol): void
 function DecoratorList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKeyList,
-        target,
-        propertyKey,
-        validate,
-        { listMaxLength: cfg.listMaxLength, message: cfg.message }
-      )
-    }
+    return getPropertyDecorator(verify_list, args[0]);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKeyList,
-      args[0],
-      args[1],
-      validate,
-      {}
-    )
+    doPropertyDecorator(args[0], args[1], verify_list, {})
   }
 }
 
@@ -72,17 +61,8 @@ export function AssertTrue(cfg?: {
 export function AssertTrue(target: Object, propertyKey: string | symbol): void
 export function AssertTrue(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey,
-        target,
-        propertyKey,
-        validate,
-        { message: cfg.message }
-      )
-    }
+    return getPropertyDecorator(verify, args[0]);
   } else {
-    _validate_set_property_matedata(MetadataKey, args[0], args[1], validate, {})
+    doPropertyDecorator(args[0], args[1], verify, {})
   }
 }

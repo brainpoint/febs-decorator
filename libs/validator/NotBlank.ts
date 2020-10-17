@@ -9,19 +9,24 @@
 
 import * as febs from 'febs-browser'
 import {
-  MetadataKey_NotBlank as MetadataKey,
-  MetadataKey_NotBlankList as MetadataKeyList,
-  _validate_set_property_matedata,
-  _validate_set_property_matedata_list,
+  verifyPropertyList,
+  doPropertyDecorator,
+  getPropertyDecorator,
+
 } from './validatorUtils'
 
-function validate(param: any, decoratorData: any): { r?: boolean; v?: any } {
-  if (febs.string.isEmpty(param) || febs.string.trim(param).length <= 0) {
-    return { r: false }
+function verify(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  if (febs.string.isEmpty(propertyValue) || febs.string.trim(propertyValue).length <= 0) {
+    return { isValid: false }
   }
 
-  return { v: param }
+  return { propertyValue: propertyValue }
 }
+
+function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, verify);
+}
+
 
 function DecoratorList(cfg?: {
   listMaxLength?: number
@@ -31,24 +36,13 @@ function DecoratorList(target: Object, propertyKey: string | symbol): void
 function DecoratorList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKeyList,
-        target,
-        propertyKey,
-        validate,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(verify_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKeyList,
+    doPropertyDecorator(
+      
       args[0],
       args[1],
-      validate,
+      verify_list,
       {}
     )
   }
@@ -59,6 +53,9 @@ function DecoratorList(...args: any[]) {
  */
 NotBlank.List = DecoratorList
 
+/**
+* @desc: 指定参数必须至少包含一个非空字符串; trim操作后长度>0
+*/
 export function NotBlank(cfg?: {
   message?: string
 }): (target: Object, propertyKey: string | symbol) => void
@@ -66,16 +63,8 @@ export function NotBlank(target: Object, propertyKey: string | symbol): void
 export function NotBlank(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey,
-        target,
-        propertyKey,
-        validate,
-        { message: cfg.message }
-      )
-    }
+    return getPropertyDecorator(verify, cfg);
   } else {
-    _validate_set_property_matedata(MetadataKey, args[0], args[1], validate, {})
+    doPropertyDecorator( args[0], args[1], verify, {})
   }
 }

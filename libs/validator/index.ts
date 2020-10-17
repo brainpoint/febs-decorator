@@ -30,4 +30,5 @@ export { PositiveOrZero } from './PositiveOrZero';
 export { Range } from './Range';
 export { Size } from './Size';
 
+export { Enum } from './Enum';
 export { Type } from './Type';

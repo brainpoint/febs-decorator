@@ -9,53 +9,47 @@
 
 import * as febs from 'febs-browser'
 import {
-  MetadataKey_Max as MetadataKey,
-  MetadataKey_MaxList as MetadataKeyList,
-  _validate_set_property_matedata,
-  _validate_set_property_matedata_list,
+  verifyPropertyList,
+  getPropertyDecorator,
+
 } from './validatorUtils'
 
-function validate(param: any, decoratorData: any): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+function verify(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (!febs.utils.bigint_check(param)) {
-    return { r: false }
-  }
-
-  if (febs.utils.bigint_less_than(decoratorData.value, param)) {
-    return { r: false }
+  if (!febs.utils.bigint_check(propertyValue)) {
+    return { isValid: false }
   }
 
-  if (typeof param === 'string') {
-    if (param.length > 15) {
-      return { v: febs.utils.bigint(param) }
+  if (febs.utils.bigint_less_than(decoratorData.value, propertyValue)) {
+    return { isValid: false }
+  }
+
+  if (typeof propertyValue === 'string') {
+    if (propertyValue.length > 15) {
+      return { propertyValue: febs.utils.bigint(propertyValue) }
     } else {
-      return { v: Number(param) }
+      return { propertyValue: Number(propertyValue) }
     }
   } else {
-    return { v: param }
+    return { propertyValue: propertyValue }
   }
 }
+
+function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, verify);
+}
+
+
 
 function DecoratorList(cfg: {
   listMaxLength?: number
   value: number | febs.BigNumber | string
   message?: string
 }) {
-  return (target: Object, propertyKey: string | symbol) => {
-    _validate_set_property_matedata_list(
-      MetadataKeyList,
-      target,
-      propertyKey,
-      validate,
-      {
-        listMaxLength: cfg.listMaxLength,
-        value: cfg.value || 0,
-        message: cfg.message,
-      }
-    )
-  }
+  cfg.value = cfg.value || 0;
+  return getPropertyDecorator(verify_list, cfg);
 }
 
 /**
@@ -74,13 +68,6 @@ export function Max(cfg: {
   value: number | febs.BigNumber | string
   message?: string
 }) {
-  return (target: Object, propertyKey: string | symbol) => {
-    _validate_set_property_matedata(
-      MetadataKey,
-      target,
-      propertyKey,
-      validate,
-      { value: cfg.value || 0, message: cfg.message }
-    )
-  }
+  cfg.value = cfg.value || 0;
+  return getPropertyDecorator(verify, cfg);
 }

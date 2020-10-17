@@ -9,34 +9,41 @@
 
 import * as febs from 'febs-browser'
 import {
-  MetadataKey_PastOrPresent as MetadataKey,
-  MetadataKey_PastOrPresentList as MetadataKeyList,
-  _validate_set_property_matedata,
-  _validate_set_property_matedata_list,
+  verifyPropertyList,
+  doPropertyDecorator,
+  getPropertyDecorator,
+
 } from './validatorUtils'
 
-function validate(param: any, decoratorData: any): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+function verify(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (typeof param === 'string') {
-    param = new Date(param)
-  }
-
-  if (!febs.date.isValidate(param)) {
-    return { r: false }
+  if (typeof propertyValue === 'string') {
+    propertyValue = new Date(propertyValue)
   }
 
-  let now: Date = new Date()
+  if (!febs.date.isValidate(propertyValue)) {
+    return { isValid: false }
+  }
+
+  let now: Date = decoratorData.now ? decoratorData.now : new Date()
   if (
-    param.getTime() + param.getTimezoneOffset() * 60 * 1000 >
-    now.getTime() + now.getTimezoneOffset() * 60 * 1000
+    propertyValue.getTime() + propertyValue.getTimezoneOffset() * 60 * 1000 >=
+    now.getTime() + now.getTimezoneOffset() * 60 * 1000 + 10
   ) {
-    return { r: false }
+    return { isValid: false }
   }
 
-  return { v: param }
+  return { propertyValue: propertyValue }
 }
+
+function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  decoratorData.now = new Date();
+  return verifyPropertyList(propertyValue, decoratorData, verify);
+}
+
+
 
 function DecoratorList(cfg?: {
   listMaxLength?: number
@@ -46,24 +53,13 @@ function DecoratorList(target: Object, propertyKey: string | symbol): void
 function DecoratorList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKeyList,
-        target,
-        propertyKey,
-        validate,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(verify_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKeyList,
+    doPropertyDecorator(
+      
       args[0],
       args[1],
-      validate,
+      verify_list,
       {}
     )
   }
@@ -94,16 +90,8 @@ export function PastOrPresent(
 export function PastOrPresent(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey,
-        target,
-        propertyKey,
-        validate,
-        { message: cfg.message }
-      )
-    }
+    return getPropertyDecorator(verify, cfg);
   } else {
-    _validate_set_property_matedata(MetadataKey, args[0], args[1], validate, {})
+    doPropertyDecorator( args[0], args[1], verify, {})
   }
 }

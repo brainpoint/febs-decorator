@@ -9,24 +9,10 @@
 
 import * as febs from 'febs-browser'
 import {
-  MetadataKey_TypeArray,
-  MetadataKey_TypeArrayList,
-  MetadataKey_TypeBigInt,
-  MetadataKey_TypeBigIntList,
-  MetadataKey_TypeBool,
-  MetadataKey_TypeBoolList,
-  MetadataKey_TypeDate,
-  MetadataKey_TypeDateList,
-  MetadataKey_TypeInteger,
-  MetadataKey_TypeIntegerList,
-  MetadataKey_TypeNumber,
-  MetadataKey_TypeNumberList,
-  MetadataKey_TypeObject,
-  MetadataKey_TypeObjectList,
-  MetadataKey_TypeString,
-  MetadataKey_TypeStringList,
-  _validate_set_property_matedata,
-  _validate_set_property_matedata_list,
+  verifyPropertyList,
+  doPropertyDecorator,
+  getPropertyDecorator,
+
 } from './validatorUtils'
 
 export const Type = {
@@ -38,26 +24,32 @@ export const Type = {
   Date: Datea,
   Object: Objecta,
   Array: Arraya,
+  Enum: Enuma,
 }
 
 /**
  * @desc: boolean
  */
 function validateBoolean(
-  param: any,
+  propertyValue: any,
   decoratorData: any
-): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (param === 'false' || param === 'true') {
-    return { v: param === 'false' ? false : true }
+  if (propertyValue === 'false' || propertyValue === 'true') {
+    return { propertyValue: propertyValue === 'false' ? false : true }
   }
-  if (param !== false && param !== true && param !== 1 && param !== 0) {
-    return { r: false }
+  if (propertyValue !== false && propertyValue !== true && propertyValue !== 1 && propertyValue !== 0) {
+    return { isValid: false }
   }
-  return { v: !!param }
+  return { propertyValue: !!propertyValue }
 }
+
+function validateBoolean_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, validateBoolean);
+}
+
 function BooleanList(cfg?: {
   listMaxLength?: number
   message?: string
@@ -66,24 +58,12 @@ function BooleanList(target: Object, propertyKey: string | symbol): void
 function BooleanList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKey_TypeBoolList,
-        target,
-        propertyKey,
-        validateBoolean,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(validateBoolean_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKey_TypeBoolList,
+    doPropertyDecorator(
       args[0],
       args[1],
-      validateBoolean,
+      validateBoolean_list,
       {}
     )
   }
@@ -100,18 +80,9 @@ function Boolean(cfg?: { message?: string }): PropertyDecorator
 function Boolean(target: Object, propertyKey: string | symbol): void
 function Boolean(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey_TypeBool,
-        target,
-        propertyKey,
-        validateBoolean,
-        { message: args[0] ? args[0].message : undefined }
-      )
-    }
+    return getPropertyDecorator(validateBoolean, args[0]);
   } else {
-    _validate_set_property_matedata(
-      MetadataKey_TypeBool,
+    doPropertyDecorator(
       args[0],
       args[1],
       validateBoolean,
@@ -125,25 +96,31 @@ Boolean.List = BooleanList
  * @desc: Number
  */
 function validateNumber(
-  param: any,
+  propertyValue: any,
   decoratorData: any
-): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (typeof param === 'number') {
-    return { v: param }
+  if (typeof propertyValue === 'number') {
+    return { propertyValue: propertyValue }
   }
 
-  if (Array.isArray(param)) {
-    return { r: false }
+  if (Array.isArray(propertyValue)) {
+    return { isValid: false }
   }
-  param = Number(param)
-  if (Number.isNaN(param)) {
-    return { r: false }
+  propertyValue = Number(propertyValue)
+  if (Number.isNaN(propertyValue)) {
+    return { isValid: false }
   }
-  return { v: param }
+  return { propertyValue: propertyValue }
 }
+
+
+function validateNumber_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, validateNumber);
+}
+
 function NumberList(cfg?: {
   listMaxLength?: number
   message?: string
@@ -152,24 +129,12 @@ function NumberList(target: Object, propertyKey: string | symbol): void
 function NumberList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKey_TypeNumberList,
-        target,
-        propertyKey,
-        validateNumber,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(validateNumber_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKey_TypeNumberList,
+    doPropertyDecorator(
       args[0],
       args[1],
-      validateNumber,
+      validateNumber_list,
       {}
     )
   }
@@ -186,18 +151,9 @@ function Numbera(cfg?: { message?: string }): PropertyDecorator
 function Numbera(target: Object, propertyKey: string | symbol): void
 function Numbera(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey_TypeNumber,
-        target,
-        propertyKey,
-        validateNumber,
-        { message: args[0] ? args[0].message : undefined }
-      )
-    }
+    return getPropertyDecorator(validateNumber, args[0]);
   } else {
-    _validate_set_property_matedata(
-      MetadataKey_TypeNumber,
+    doPropertyDecorator(
       args[0],
       args[1],
       validateNumber,
@@ -211,21 +167,25 @@ Numbera.List = NumberList
  * @desc: Int
  */
 function validateInteger(
-  param: any,
+  propertyValue: any,
   decoratorData: any
-): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (Array.isArray(param)) {
-    return { r: false }
+  if (Array.isArray(propertyValue)) {
+    return { isValid: false }
   }
-  param = Number(param)
-  if (Number.isInteger(param)) {
-    return { v: param }
+  propertyValue = Number(propertyValue)
+  if (Number.isInteger(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
 
-  return { r: false }
+  return { isValid: false }
+}
+
+function validateInteger_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, validateInteger);
 }
 function IntegerList(cfg?: {
   listMaxLength?: number
@@ -235,24 +195,12 @@ function IntegerList(target: Object, propertyKey: string | symbol): void
 function IntegerList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKey_TypeIntegerList,
-        target,
-        propertyKey,
-        validateInteger,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(validateInteger_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKey_TypeIntegerList,
+    doPropertyDecorator(
       args[0],
       args[1],
-      validateInteger,
+      validateInteger_list,
       {}
     )
   }
@@ -269,18 +217,9 @@ function Integer(cfg?: { message?: string }): PropertyDecorator
 function Integer(target: Object, propertyKey: string | symbol): void
 function Integer(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey_TypeInteger,
-        target,
-        propertyKey,
-        validateInteger,
-        { message: args[0] ? args[0].message : undefined }
-      )
-    }
+    return getPropertyDecorator(validateInteger, args[0]);
   } else {
-    _validate_set_property_matedata(
-      MetadataKey_TypeInteger,
+    doPropertyDecorator(
       args[0],
       args[1],
       validateInteger,
@@ -294,17 +233,21 @@ Integer.List = IntegerList
  * @desc: BigInt
  */
 function validateBigInt(
-  param: any,
+  propertyValue: any,
   decoratorData: any
-): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (!febs.utils.bigint_check(param)) {
-    return { r: false }
+  if (!febs.utils.bigint_check(propertyValue)) {
+    return { isValid: false }
   }
 
-  return { v: param }
+  return { propertyValue: propertyValue }
+}
+
+function validateBigInt_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, validateBigInt);
 }
 function BigIntList(cfg?: {
   listMaxLength?: number
@@ -314,24 +257,12 @@ function BigIntList(target: Object, propertyKey: string | symbol): void
 function BigIntList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKey_TypeBigIntList,
-        target,
-        propertyKey,
-        validateBigInt,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(validateBigInt_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKey_TypeBigIntList,
+    doPropertyDecorator(
       args[0],
       args[1],
-      validateBigInt,
+      validateBigInt_list,
       {}
     )
   }
@@ -348,18 +279,9 @@ function BigInt(cfg?: { message?: string }): PropertyDecorator
 function BigInt(target: Object, propertyKey: string | symbol): void
 function BigInt(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey_TypeBigInt,
-        target,
-        propertyKey,
-        validateBigInt,
-        { message: args[0] ? args[0].message : undefined }
-      )
-    }
+    return getPropertyDecorator(validateBigInt, args[0]);
   } else {
-    _validate_set_property_matedata(
-      MetadataKey_TypeBigInt,
+    doPropertyDecorator(
       args[0],
       args[1],
       validateBigInt,
@@ -373,16 +295,20 @@ BigInt.List = BigIntList
  * @desc: String
  */
 function validateString(
-  param: any,
+  propertyValue: any,
   decoratorData: any
-): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (typeof param !== 'string') {
-    return { r: false }
+  if (typeof propertyValue !== 'string') {
+    return { isValid: false }
   }
-  return { v: param }
+  return { propertyValue: propertyValue }
+}
+
+function validateString_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, validateString);
 }
 function StringList(cfg?: {
   listMaxLength?: number
@@ -392,24 +318,12 @@ function StringList(target: Object, propertyKey: string | symbol): void
 function StringList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKey_TypeStringList,
-        target,
-        propertyKey,
-        validateString,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(validateString_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKey_TypeStringList,
+    doPropertyDecorator(
       args[0],
       args[1],
-      validateString,
+      validateString_list,
       {}
     )
   }
@@ -426,18 +340,10 @@ function Stringa(cfg?: { message?: string }): PropertyDecorator
 function Stringa(target: Object, propertyKey: string | symbol): void
 function Stringa(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey_TypeString,
-        target,
-        propertyKey,
-        validateString,
-        { message: args[0] ? args[0].message : undefined }
-      )
-    }
+    let cfg: any = args[0] || {}
+    return getPropertyDecorator(validateString, cfg);
   } else {
-    _validate_set_property_matedata(
-      MetadataKey_TypeString,
+    doPropertyDecorator(
       args[0],
       args[1],
       validateString,
@@ -451,21 +357,24 @@ Stringa.List = StringList
  * @desc: Date
  */
 function validateDate(
-  param: any,
+  propertyValue: any,
   decoratorData: any
-): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (typeof param === 'string') {
-    param = new Date(param)
-  }
-
-  if (!febs.date.isValidate(param)) {
-    return { r: false }
+  if (typeof propertyValue === 'string') {
+    propertyValue = new Date(propertyValue)
   }
 
-  return { v: param }
+  if (!febs.date.isValidate(propertyValue)) {
+    return { isValid: false }
+  }
+
+  return { propertyValue: propertyValue }
+}
+function validateDate_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, validateDate);
 }
 function DateList(cfg?: {
   listMaxLength?: number
@@ -475,24 +384,12 @@ function DateList(target: Object, propertyKey: string | symbol): void
 function DateList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKey_TypeDateList,
-        target,
-        propertyKey,
-        validateDate,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(validateDate_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKey_TypeDateList,
+    doPropertyDecorator(
       args[0],
       args[1],
-      validateDate,
+      validateDate_list,
       {}
     )
   }
@@ -509,18 +406,10 @@ function Datea(cfg?: { message?: string }): PropertyDecorator
 function Datea(target: Object, propertyKey: string | symbol): void
 function Datea(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey_TypeDate,
-        target,
-        propertyKey,
-        validateDate,
-        { message: args[0] ? args[0].message : undefined }
-      )
-    }
+    let cfg: any = args[0] || {}
+    return getPropertyDecorator(validateDate, cfg);
   } else {
-    _validate_set_property_matedata(
-      MetadataKey_TypeDate,
+    doPropertyDecorator(
       args[0],
       args[1],
       validateDate,
@@ -534,20 +423,24 @@ Datea.List = DateList
  * @desc: Object
  */
 function validateObject(
-  param: any,
+  propertyValue: any,
   decoratorData: any
-): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (Array.isArray(param)) {
-    return { r: false }
+  if (Array.isArray(propertyValue)) {
+    return { isValid: false }
   }
-  if (typeof param === 'object') {
-    return { v: param }
+  if (typeof propertyValue === 'object') {
+    return { propertyValue: propertyValue }
   }
 
-  return { r: false }
+  return { isValid: false }
+}
+
+function validateObject_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, validateObject);
 }
 function ObjectList(cfg?: {
   listMaxLength?: number
@@ -557,24 +450,12 @@ function ObjectList(target: Object, propertyKey: string | symbol): void
 function ObjectList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKey_TypeObjectList,
-        target,
-        propertyKey,
-        validateObject,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(validateObject_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKey_TypeObjectList,
+    doPropertyDecorator(
       args[0],
       args[1],
-      validateObject,
+      validateObject_list,
       {}
     )
   }
@@ -591,18 +472,10 @@ function Objecta(cfg?: { message?: string }): PropertyDecorator
 function Objecta(target: Object, propertyKey: string | symbol): void
 function Objecta(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey_TypeObject,
-        target,
-        propertyKey,
-        validateObject,
-        { message: args[0] ? args[0].message : undefined }
-      )
-    }
+    let cfg: any = args[0] || {}
+    return getPropertyDecorator(validateObject, cfg);
   } else {
-    _validate_set_property_matedata(
-      MetadataKey_TypeObject,
+    doPropertyDecorator(
       args[0],
       args[1],
       validateObject,
@@ -616,25 +489,29 @@ Objecta.List = ObjectList
  * @desc: Array
  */
 function validateArray(
-  param: any,
+  propertyValue: any,
   decoratorData: any
-): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (Array.isArray(param)) {
+  if (Array.isArray(propertyValue)) {
     if (typeof decoratorData.checkCB === 'function') {
-      for (let i = 0; i < param.length; i++) {
-        if (!decoratorData.checkCB(param[i], i)) {
-          return { r: false }
+      for (let i = 0; i < propertyValue.length; i++) {
+        if (!decoratorData.checkCB(propertyValue[i], i)) {
+          return { isValid: false }
         }
       }
     }
 
-    return { v: param }
+    return { propertyValue: propertyValue }
   }
 
-  return { r: false }
+  return { isValid: false }
+}
+
+function validateArray_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, validateArray);
 }
 function ArrayList(cfg?: {
   checkCB?: (elem: any, index?: number) => boolean
@@ -645,25 +522,12 @@ function ArrayList(target: Object, propertyKey: string | symbol): void
 function ArrayList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKey_TypeArrayList,
-        target,
-        propertyKey,
-        validateArray,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-          checkCB: cfg.checkCB,
-        }
-      )
-    }
+    return getPropertyDecorator(validateArray_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKey_TypeArrayList,
+    doPropertyDecorator(
       args[0],
       args[1],
-      validateArray,
+      validateArray_list,
       {}
     )
   }
@@ -685,21 +549,10 @@ function Arraya(cfg?: {
 function Arraya(target: Object, propertyKey: string | symbol): void
 function Arraya(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey_TypeArray,
-        target,
-        propertyKey,
-        validateArray,
-        {
-          message: args[0] ? args[0].message : undefined,
-          checkCB: args[0] ? args[0].checkCB : undefined,
-        }
-      )
-    }
+    let cfg: any = args[0] || {}
+    return getPropertyDecorator(validateArray, cfg);
   } else {
-    _validate_set_property_matedata(
-      MetadataKey_TypeArray,
+    doPropertyDecorator(
       args[0],
       args[1],
       validateArray,
@@ -708,3 +561,54 @@ function Arraya(...args: any[]) {
   }
 }
 Arraya.List = ArrayList
+
+
+/**
+ * @desc: Enum
+ */
+function validateEnum(
+  propertyValue: any,
+  decoratorData: any
+): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
+  }
+
+  for (const key1 in decoratorData.enumType) {
+    if (propertyValue === decoratorData.enumType[key1]) {
+      return { propertyValue: propertyValue };
+    }
+  }
+
+  return { isValid: false }
+}
+
+function validateEnum_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, validateEnum);
+}
+function EnumList(cfg: {
+  /** 要验证的枚举类型 */
+  enumType: any,
+  checkCB?: (elem: any, index?: number) => boolean
+  listMaxLength?: number
+  message?: string
+}): PropertyDecorator {
+  return getPropertyDecorator(validateEnum_list, cfg);
+}
+
+/**
+ * @desc: 判断是否是指定的枚举类型
+ *
+ * @param cfg 可以传递checkCB(elem:any, index:number)=>boolean 对每个元素的类型进行判断.
+ *
+ * @return:
+ */
+function Enuma(cfg: {
+  /** 要验证的枚举类型 */
+  enumType: any,
+  checkCB?: (elem: any, index?: number) => boolean
+  message?: string
+}): PropertyDecorator {
+  return getPropertyDecorator(validateEnum, cfg);
+}
+Enuma.List = EnumList

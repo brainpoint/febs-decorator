@@ -18,15 +18,14 @@ function verify(propertyValue: any, decoratorData: any): { isValid?: boolean, pr
   if (febs.utils.isNull(propertyValue)) {
     return { propertyValue: propertyValue }
   }
-  if (febs.string.isEmpty(propertyValue)) {
-    return { isValid: false }
+
+  for (let i = 0; i < decoratorData.allows.length; i++) {
+    if (propertyValue === decoratorData.allows[i]) {
+      return { propertyValue: propertyValue };
+    }
   }
 
-  if (!decoratorData.regexp.test(propertyValue)) {
-    return { isValid: false }
-  }
-
-  return { propertyValue: propertyValue }
+  return { isValid: false };
 }
 
 
@@ -37,42 +36,40 @@ function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolea
 
 
 function DecoratorList(cfg: {
-  listMaxLength?: number
-  regexp: RegExp
+  listMaxLength?: number,
+  allows: any[],
   message?: string
 }) {
-  if (!cfg.regexp || typeof cfg.regexp.test !== 'function') {
+  if (!Array.isArray(cfg.allows)) {
     throw new febs.exception(
-      'verify @Pattern regexp error',
+      'verify @Enum allows error',
       febs.exception.ERROR,
       __filename,
       __line,
       __column
     )
   }
-
   return getPropertyDecorator(verify_list, cfg);
 }
 
 /**
  * 验证是否是数组.
  */
-Pattern.List = DecoratorList
+Enum.List = DecoratorList
 
 /**
- * @desc 指定参数必须是email或指定的正则表达式.
+ * @desc 验证参数是否配置允许的值之一.
  * @returns {PropertyDecorator}
  */
-export function Pattern(cfg: { regexp: RegExp; message?: string }) {
-  if (!cfg.regexp || typeof cfg.regexp.test !== 'function') {
+export function Enum(cfg: { allows: any[]; message?: string }) {
+  if (!Array.isArray(cfg.allows)) {
     throw new febs.exception(
-      'verify @Pattern regexp error',
+      'verify @Enum allows error',
       febs.exception.ERROR,
       __filename,
       __line,
       __column
     )
   }
-
   return getPropertyDecorator(verify, cfg);
 }

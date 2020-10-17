@@ -9,24 +9,28 @@
 
 import * as febs from 'febs-browser'
 import {
-  MetadataKey_Email as MetadataKey,
-  MetadataKey_EmailList as MetadataKeyList,
-  _validate_set_property_matedata,
-  _validate_set_property_matedata_list,
+  verifyPropertyList,
+  doPropertyDecorator,
+  getPropertyDecorator,
+
 } from './validatorUtils'
 
 const defaultReg = /^(([A-Za-z0-9\u4e00-\u9fa5_-]|\.)+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+)$/
 
-function validate(param: any, decoratorData: any): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+function verify(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
 
-  if (!decoratorData.regexp.test(param)) {
-    return { r: false }
+  if (!decoratorData.regexp.test(propertyValue)) {
+    return { isValid: false }
   }
 
-  return { v: param }
+  return { propertyValue: propertyValue }
+}
+
+function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, verify);
 }
 
 function DecoratorList(cfg?: {
@@ -43,32 +47,20 @@ function DecoratorList(...args: any[]) {
 
     if (typeof cfg.regexp.test !== 'function') {
       throw new febs.exception(
-        'validate @Email regexp error',
+        'verify @Email regexp error',
         febs.exception.ERROR,
         __filename,
         __line,
         __column
       )
     }
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKeyList,
-        target,
-        propertyKey,
-        validate,
-        {
-          listMaxLength: cfg.listMaxLength,
-          regexp: cfg.regexp,
-          message: cfg.message,
-        }
-      )
-    }
+
+    return getPropertyDecorator(verify_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKeyList,
+    doPropertyDecorator(
       args[0],
       args[1],
-      validate,
+      verify_list,
       {
         regexp: defaultReg,
       }
@@ -99,7 +91,7 @@ export function Email(...args: any[]) {
 
     if (typeof cfg.regexp.test !== 'function') {
       throw new febs.exception(
-        'validate @Email regexp error',
+        'verify @Email regexp error',
         febs.exception.ERROR,
         __filename,
         __line,
@@ -107,20 +99,9 @@ export function Email(...args: any[]) {
       )
     }
 
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey,
-        target,
-        propertyKey,
-        validate,
-        {
-          regexp: cfg.regexp,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(verify, cfg);
   } else {
-    _validate_set_property_matedata(MetadataKey, args[0], args[1], validate, {
+    doPropertyDecorator(args[0], args[1], verify, {
       regexp: defaultReg,
     })
   }

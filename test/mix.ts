@@ -7,28 +7,7 @@
  */
 import tap from 'tap'
 import {
-  AssertFalse,
-  AssertTrue,
-  DecimalMax,
-  DecimalMin,
-  Email,
-  Future,
-  FutureOrPresent,
-  Max,
-  Min,
-  Negative,
-  NegativeOrZero,
-  NotBlank,
-  NotEmpty,
   NotNull,
-  Null,
-  Past,
-  PastOrPresent,
-  Pattern,
-  Positive,
-  PositiveOrZero,
-  Range,
-  Size,
   Type,
 } from '../libs'
 import { except_fail, except_success } from './lib'
@@ -46,7 +25,6 @@ let bean = new MixBean()
 // notnull
 //--------------------------------------------------------
 except_success(() => {
-    bean.value_notnullList = [122, 1, 123.123]
   bean.value_notnullList = [1, 2, 3, '123123']
 })
 except_fail(
@@ -64,5 +42,5 @@ except_fail(
   },
   () => {
     bean.value_notnullList = [12, undefined]
-  }
+  },
 )

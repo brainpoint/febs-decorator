@@ -1,13 +1,20 @@
 
-Some decorators, like spring-validation and so on.
+Some typescript decorators, like spring-validation and so on.
+
+## Setup
+
+```
+npm i febs-decorator
+```
 
 ## Example
 
 ```js
-import {NotNull} from 'febs-decorator';
+import {NotNull, Type} from 'febs-decorator';
 
 class BeanDemo {
     @NotNull
+    @Type.Boolean
     a: boolean = null
 }
 

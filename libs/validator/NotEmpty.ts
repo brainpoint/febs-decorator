@@ -7,25 +7,31 @@
  * Desc:
  */
 
-import * as febs from 'febs-browser'
 import {
-  MetadataKey_NotEmpty as MetadataKey,
-  MetadataKey_NotEmptyList as MetadataKeyList,
-  _validate_set_property_matedata,
-  _validate_set_property_matedata_list,
+  verifyPropertyList,
+  doPropertyDecorator,
+  getPropertyDecorator,
+
 } from './validatorUtils'
 
-function validate(param: any, decoratorData: any): { r?: boolean; v?: any } {
-  if (param === null || param === undefined) {
-    return { r: false }
+function verify(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  if (propertyValue === null || propertyValue === undefined) {
+    return { isValid: false }
   }
 
-  if (typeof param.size === 'function') {
-    return param.size() > 0 ? { v: param } : { r: false }
+  if (typeof propertyValue.size === 'function') {
+    return propertyValue.size() > 0 ? { propertyValue: propertyValue } : { isValid: false }
   } else {
-    return param.length > 0 ? { v: param } : { r: false }
+    return propertyValue.length > 0 ? { propertyValue: propertyValue } : { isValid: false }
   }
 }
+
+
+function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, verify);
+}
+
+
 
 function DecoratorList(cfg?: {
   listMaxLength?: number
@@ -35,24 +41,13 @@ function DecoratorList(target: Object, propertyKey: string | symbol): void
 function DecoratorList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKeyList,
-        target,
-        propertyKey,
-        validate,
-        {
-          listMaxLength: cfg.listMaxLength,
-          message: cfg.message,
-        }
-      )
-    }
+    return getPropertyDecorator(verify_list, cfg);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKeyList,
+    doPropertyDecorator(
+      
       args[0],
       args[1],
-      validate,
+      verify_list,
       {}
     )
   }
@@ -63,6 +58,9 @@ function DecoratorList(...args: any[]) {
  */
 NotEmpty.List = DecoratorList
 
+/**
+* @desc: 指定参数不能为 null、undefined且长度大于0<br> (o.size() > 0 或 o.length > 0)
+*/
 export function NotEmpty(cfg?: {
   message?: string
 }): (target: Object, propertyKey: string | symbol) => void
@@ -70,16 +68,8 @@ export function NotEmpty(target: Object, propertyKey: string | symbol): void
 export function NotEmpty(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
     let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey,
-        target,
-        propertyKey,
-        validate,
-        { message: cfg.message }
-      )
-    }
+    return getPropertyDecorator(verify, cfg);
   } else {
-    _validate_set_property_matedata(MetadataKey, args[0], args[1], validate, {})
+    doPropertyDecorator( args[0], args[1], verify, {})
   }
 }

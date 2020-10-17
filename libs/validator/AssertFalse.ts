@@ -9,22 +9,30 @@
 
 import * as febs from 'febs-browser'
 import {
-  MetadataKey_AssertFalse as MetadataKey,
-  MetadataKey_AssertFalseList as MetadataKeyList,
-  _validate_set_property_matedata,
-  _validate_set_property_matedata_list,
+  getPropertyDecorator,
+  verifyPropertyList,
+  doPropertyDecorator,
 } from './validatorUtils'
 
-function validate(param: any, decoratorData: any): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
+function verify(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
-  if (param !== false && param !== 'false' && param !== 0) {
-    return { r: false }
+  if (propertyValue !== false && propertyValue !== 'false' && propertyValue !== 0) {
+    return { isValid: false }
   }
 
-  return { v: false }
+  return { propertyValue: false }
 }
+
+function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, verify);
+}
+
+/**
+ * 验证是否是数组.
+ */
+AssertFalse.List = DecoratorList
 
 function DecoratorList(cfg?: {
   listMaxLength?: number
@@ -33,31 +41,11 @@ function DecoratorList(cfg?: {
 function DecoratorList(target: Object, propertyKey: string | symbol): void
 function DecoratorList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata_list(
-        MetadataKeyList,
-        target,
-        propertyKey,
-        validate,
-        { listMaxLength: cfg.listMaxLength, message: cfg.message }
-      )
-    }
+    return getPropertyDecorator(verify_list, args);
   } else {
-    _validate_set_property_matedata_list(
-      MetadataKeyList,
-      args[0],
-      args[1],
-      validate,
-      {}
-    )
+    doPropertyDecorator(args[0], args[1], verify_list, {})
   }
 }
-
-/**
- * 验证是否是数组.
- */
-AssertFalse.List = DecoratorList
 
 /**
  * 判断值是否为false或'false'
@@ -72,17 +60,8 @@ export function AssertFalse(cfg?: {
 export function AssertFalse(target: Object, propertyKey: string | symbol): void
 export function AssertFalse(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
-    let cfg: any = args[0] || {}
-    return (target: Object, propertyKey: string | symbol) => {
-      _validate_set_property_matedata(
-        MetadataKey,
-        target,
-        propertyKey,
-        validate,
-        { message: cfg.message }
-      )
-    }
+    return getPropertyDecorator(verify, args[0]);
   } else {
-    _validate_set_property_matedata(MetadataKey, args[0], args[1], validate, {})
+    doPropertyDecorator(args[0], args[1], verify, {})
   }
 }

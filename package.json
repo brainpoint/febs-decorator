@@ -25,23 +25,13 @@
     "node": ">=8"
   },
   "files": [
-    "doc",
-    "browser/common",
-    "browser/libs",
-    "browser/dist",
-    "browser/index.js",
-    "browser/third-party",
-    "browser/wxmini",
-    "browser/index.js",
-    "server",
+    "libs",
     "test",
-    "types",
-    "index.js"
+    "index.ts",
+    "tsconfig.json"
   ],
   "license": "MIT",
-  "main": "./index.js",
-  "miniprogram": "./browser/dist/wxmini",
-  "types": "./types/index.d.ts",
+  "main": "./index.ts",
   "maintainers": [
     {
       "name": "brainpoint",
@@ -49,5 +39,5 @@
     }
   ],
   "name": "febs-decorator",
-  "version": "0.0.0"
+  "version": "0.0.1"
 }

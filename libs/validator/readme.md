@@ -6,6 +6,7 @@
   - [数值判断(可以验证数值字符串)](#数值判断可以验证数值字符串)
   - [字符串判断](#字符串判断)
   - [时间判断](#时间判断)
+- [值枚举](#值枚举)
 - [类型限定](#类型限定)
 
 ## Example
@@ -90,21 +91,46 @@ obj.a = null;           // 抛出参数非法异常 (需要触发setter进行检
 | `@Past`            | Date参数是否是过去时间       | &nbsp; |
 | `@PastOrPresent`   | Date参数是否是现在或过去时间 | &nbsp; |
 
+## 值枚举
+
+| 名称                                 | 作用                          |
+| ------------------------------------ | ----------------------------- |
+| `@Enum`({allows: [v1, v2, v3, ...]}) | 验证参数是否配置允许的值之一. |
+| `@Type.Enum`({enumType: EnumName}) | 验证参数是否指定的枚举类型的值. |
+
+
+`@Type.Enum` 示例:
+
+```js
+import {Type} from 'febs-decorator';
+
+enum Enum1 {
+  a = '2323',
+  b = 'xxxx'
+}
+
+class BeanA {
+  @Type.Enum({enumType: Enum1 })
+  a: any = null;
+}
+let obj = new BeanA();
+
+obj.a = Enum1.a;
+obj.a = Enum1.b;
+obj.a = 1;  // 抛出参数非法异常.
+```
 
 ## 类型限定
 
 如下装饰器用于动态运行时对属性值进行验证.
 
-| 名称                   | 作用                                   |
-| ---------------------- | -------------------------------------- |
-| `@Type.Boolean`        | 验证参数是否为boolean值.               |
-| `@Type.Number`         | 验证参数是否为数值.                    |
-| `@Type.Integer`        | 验证参数是否为整型值.                  |
-| `@Type.BigInt`         | 验证参数是否为整型值.                  |
-| `@Type.String`         | 验证参数是否为字符串.                  |
-| `@Type.Date`           | 验证参数是否为时间.                    |
-| `@Type.Object`         | 验证参数是否为object.                  |
-| `@Type.Array`          | 验证参数是否为数组.                    |
-| `@Type.Enum`(enumType) | 验证参数是否为枚举值.                  |
-| `@In`(val1, val2, ...) | 验证参数是否为值之一.                  |
-| `@NeedLogin`           | 验证是否已经登录 (需要在ctx参数上使用) |
+| 名称            | 作用                     |
+| --------------- | ------------------------ |
+| `@Type.Boolean` | 验证参数是否为boolean值. |
+| `@Type.Number`  | 验证参数是否为数值.      |
+| `@Type.Integer` | 验证参数是否为整型值.    |
+| `@Type.BigInt`  | 验证参数是否为整型值.    |
+| `@Type.String`  | 验证参数是否为字符串.    |
+| `@Type.Date`    | 验证参数是否为时间.      |
+| `@Type.Object`  | 验证参数是否为object.    |
+| `@Type.Array`   | 验证参数是否为数组.      |

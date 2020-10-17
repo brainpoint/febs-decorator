@@ -9,32 +9,35 @@
 
 import * as febs from 'febs-browser'
 import {
-  MetadataKey_Size as MetadataKey,
-  MetadataKey_SizeList as MetadataKeyList,
-  _validate_set_property_matedata,
-  _validate_set_property_matedata_list,
+  verifyPropertyList,
+  getPropertyDecorator,
+
 } from './validatorUtils'
 
-function validate(param: any, decoratorData: any): { r?: boolean; v?: any } {
-  if (febs.utils.isNull(param)) {
-    return { v: param }
-  }
-  if (param === null || param === undefined) {
-    return { r: false }
+function verify(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  if (febs.utils.isNull(propertyValue)) {
+    return { propertyValue: propertyValue }
   }
 
-  if (typeof param.size === 'function') {
-    return param.size() >= decoratorData.min &&
-      param.size() <= decoratorData.max
-      ? { v: param }
-      : { r: false }
+  if (typeof propertyValue.size === 'function') {
+    return propertyValue.size() >= decoratorData.min &&
+      propertyValue.size() <= decoratorData.max
+      ? { propertyValue: propertyValue }
+      : { isValid: false }
   } else {
-    return param.length >= decoratorData.min &&
-      param.length <= decoratorData.max
-      ? { v: param }
-      : { r: false }
+    return propertyValue.length >= decoratorData.min &&
+      propertyValue.length <= decoratorData.max
+      ? { propertyValue: propertyValue }
+      : { isValid: false }
   }
 }
+
+
+function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolean, propertyValue?: any } {
+  return verifyPropertyList(propertyValue, decoratorData, verify);
+}
+
+
 
 function DecoratorList(cfg?: {
   listMaxLength?: number
@@ -43,20 +46,10 @@ function DecoratorList(cfg?: {
   message?: string
 }) {
   cfg = cfg || {}
-  return (target: Object, propertyKey: string | symbol) => {
-    _validate_set_property_matedata_list(
-      MetadataKeyList,
-      target,
-      propertyKey,
-      validate,
-      {
-        listMaxLength: cfg.listMaxLength,
-        min: cfg ? cfg.min || 0 : 0,
-        max: cfg ? cfg.max || Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER,
-        message: cfg.message,
-      }
-    )
-  }
+  cfg.min = cfg.min || 0;
+  cfg.max = febs.utils.isNull(cfg.max) ? Number.MAX_SAFE_INTEGER: cfg.max;
+
+  return getPropertyDecorator(verify_list, cfg);
 }
 
 /**
@@ -65,22 +58,13 @@ function DecoratorList(cfg?: {
 Size.List = DecoratorList
 
 /**
- * @desc 指定参数(字符串,array)的长度的最大最小值.
+ * @desc 指定参数(字符串,array)的长度的最大最小值 (o.size() 或 o.length) .
  * @returns {PropertyDecorator}
  */
 export function Size(cfg?: { max?: number; min?: number; message?: string }) {
   cfg = cfg || {}
-  return (target: Object, propertyKey: string | symbol) => {
-    _validate_set_property_matedata(
-      MetadataKey,
-      target,
-      propertyKey,
-      validate,
-      {
-        min: cfg ? cfg.min || 0 : 0,
-        max: cfg ? cfg.max || Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER,
-        message: cfg.message,
-      }
-    )
-  }
+  cfg.min = cfg.min || 0;
+  cfg.max = febs.utils.isNull(cfg.max) ? Number.MAX_SAFE_INTEGER: cfg.max;
+
+  return getPropertyDecorator(verify, cfg);
 }
