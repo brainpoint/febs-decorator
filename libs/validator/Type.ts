@@ -363,8 +363,12 @@ function validateDate(
   if (febs.utils.isNull(propertyValue)) {
     return { propertyValue: propertyValue }
   }
-  if (typeof propertyValue === 'string') {
+  let ty = typeof propertyValue;
+  if (ty === 'string') {
     propertyValue = new Date(propertyValue)
+  }
+  else if (ty === 'number') {
+    propertyValue = new Date(ty);
   }
 
   if (!febs.date.isValidate(propertyValue)) {
