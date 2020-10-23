@@ -32,7 +32,4 @@ npm-debug.log
 .editorconfig
 .gitignore
 
-# resource
-#
-browser/dist/febs/report.html
-browser/types/
+libs

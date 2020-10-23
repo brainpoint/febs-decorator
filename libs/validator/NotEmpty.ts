@@ -36,7 +36,7 @@ function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolea
 function DecoratorList(cfg?: {
   listMaxLength?: number
   message?: string
-}): (target: Object, propertyKey: string | symbol) => void
+}): PropertyDecorator
 function DecoratorList(target: Object, propertyKey: string | symbol): void
 function DecoratorList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
@@ -63,7 +63,7 @@ NotEmpty.List = DecoratorList
 */
 export function NotEmpty(cfg?: {
   message?: string
-}): (target: Object, propertyKey: string | symbol) => void
+}): PropertyDecorator
 export function NotEmpty(target: Object, propertyKey: string | symbol): void
 export function NotEmpty(...args: any[]) {
   if (args.length == 1 || args.length == 0) {

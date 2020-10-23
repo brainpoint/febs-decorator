@@ -6,7 +6,7 @@
  * Desc:
  */
 import tap from 'tap'
-import { Type } from '../libs'
+import { Type } from '..'
 import { except_fail, except_success } from './lib'
 
 class TypeBean {

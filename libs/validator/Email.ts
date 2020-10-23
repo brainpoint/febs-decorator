@@ -37,7 +37,7 @@ function DecoratorList(cfg?: {
   listMaxLength?: number
   regexp?: RegExp
   message?: string
-}): (target: Object, propertyKey: string | symbol) => void
+}): PropertyDecorator
 function DecoratorList(target: Object, propertyKey: string | symbol): void
 function DecoratorList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
@@ -81,7 +81,7 @@ Email.List = DecoratorList
 export function Email(cfg?: {
   regexp?: RegExp
   message?: string
-}): (target: Object, propertyKey: string | symbol) => void
+}): PropertyDecorator
 export function Email(target: Object, propertyKey: string | symbol): void
 export function Email(...args: any[]) {
   if (args.length == 1 || args.length == 0) {

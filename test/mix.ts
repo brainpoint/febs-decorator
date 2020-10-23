@@ -9,7 +9,7 @@ import tap from 'tap'
 import {
   NotNull,
   Type,
-} from '../libs'
+} from '..'
 import { except_fail, except_success } from './lib'
 
 class MixBean {

@@ -8,7 +8,7 @@
  */
 
 import 'reflect-metadata'
-import ParameterException from '../exception/ParameterException'
+import * as febs from 'febs-browser';
 import objectUtils from '../utils/objectUtils'
 
 export const MetadataKey_AssertFalse = Symbol('MetadataKey_AssertFalse')
@@ -105,14 +105,13 @@ export function _validate_param(
   if (requiredParameters) {
     for (let parameterIndex of requiredParameters) {
       if (parameterIndex.parameterIndex >= argumentList.length) {
-        //throw new Error('Missing required argument.')
         let paramName =
           objectUtils.getParameterName(method)[parameterIndex.parameterIndex] ||
           ''
         let defaultMsg: string =
           parameterIndex.data && typeof parameterIndex.data.message === 'string'
             ? parameterIndex.data.message
-            : `Parameter '${paramName}': Missing required argument`
+            : `validate Parameter '${paramName}': Missing required argument`
         return { errParamName: paramName, defaultMsg }
       } else {
         let paramName =
@@ -223,14 +222,14 @@ export function doPropertyDecorator(
           defaultMsg =
             decoratorData.message ||
             `Property '${String(propertyKey)}': The value verify failure`
-          throw new ParameterException(defaultMsg, __filename, __line, __column)
+          throw new febs.exception(defaultMsg, febs.exception.PARAM, __filename, __line, __column)
         }
 
         if (false === r.isValid) {
           defaultMsg =
             decoratorData.message ||
             `Property '${String(propertyKey)}': The value is invalid`
-          throw new ParameterException(defaultMsg, __filename, __line, __column)
+          throw new febs.exception(defaultMsg, febs.exception.PARAM, __filename, __line, __column)
         }
 
         value = r.propertyValue

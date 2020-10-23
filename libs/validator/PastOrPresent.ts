@@ -52,7 +52,7 @@ function verify_list(propertyValue: any, decoratorData: any): { isValid?: boolea
 function DecoratorList(cfg?: {
   listMaxLength?: number
   message?: string
-}): (target: Object, propertyKey: string | symbol) => void
+}): PropertyDecorator
 function DecoratorList(target: Object, propertyKey: string | symbol): void
 function DecoratorList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
@@ -86,7 +86,7 @@ PastOrPresent.List = DecoratorList
  */
 export function PastOrPresent(cfg?: {
   message?: string
-}): (target: Object, propertyKey: string | symbol) => void
+}): PropertyDecorator
 export function PastOrPresent(
   target: Object,
   propertyKey: string | symbol

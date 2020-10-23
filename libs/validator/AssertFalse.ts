@@ -37,7 +37,7 @@ AssertFalse.List = DecoratorList
 function DecoratorList(cfg?: {
   listMaxLength?: number
   message?: string
-}): (target: Object, propertyKey: string | symbol) => void
+}): PropertyDecorator
 function DecoratorList(target: Object, propertyKey: string | symbol): void
 function DecoratorList(...args: any[]) {
   if (args.length == 1 || args.length == 0) {
@@ -56,7 +56,7 @@ function DecoratorList(...args: any[]) {
  */
 export function AssertFalse(cfg?: {
   message?: string
-}): (target: Object, propertyKey: string | symbol) => void
+}): PropertyDecorator
 export function AssertFalse(target: Object, propertyKey: string | symbol): void
 export function AssertFalse(...args: any[]) {
   if (args.length == 1 || args.length == 0) {

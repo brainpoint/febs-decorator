@@ -31,7 +31,7 @@ import {
   Range,
   Size,
   Type,
-} from '../libs'
+} from '..'
 import { except_fail, except_success } from './lib'
 
 enum Enum1 {
