@@ -1,12 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyPropertyList = exports.getPropertyDecorator = exports.doPropertyDecorator = exports._validate_param = exports.MetadataKey_TypeArrayList = exports.MetadataKey_TypeArray = exports.MetadataKey_TypeObjectList = exports.MetadataKey_TypeObject = exports.MetadataKey_TypeDateList = exports.MetadataKey_TypeDate = exports.MetadataKey_TypeStringList = exports.MetadataKey_TypeString = exports.MetadataKey_TypeBigIntList = exports.MetadataKey_TypeBigInt = exports.MetadataKey_TypeIntegerList = exports.MetadataKey_TypeInteger = exports.MetadataKey_TypeNumberList = exports.MetadataKey_TypeNumber = exports.MetadataKey_TypeBoolList = exports.MetadataKey_TypeBool = exports.MetadataKey_SizeList = exports.MetadataKey_Size = exports.MetadataKey_RangeList = exports.MetadataKey_Range = exports.MetadataKey_PositiveOrZeroList = exports.MetadataKey_PositiveOrZero = exports.MetadataKey_PositiveList = exports.MetadataKey_Positive = exports.MetadataKey_PatternList = exports.MetadataKey_Pattern = exports.MetadataKey_PastOrPresentList = exports.MetadataKey_PastOrPresent = exports.MetadataKey_PastList = exports.MetadataKey_Past = exports.MetadataKey_NullList = exports.MetadataKey_Null = exports.MetadataKey_NotNullList = exports.MetadataKey_NotNull = exports.MetadataKey_NotEmptyList = exports.MetadataKey_NotEmpty = exports.MetadataKey_NotBlankList = exports.MetadataKey_NotBlank = exports.MetadataKey_NegativeOrZeroList = exports.MetadataKey_NegativeOrZero = exports.MetadataKey_NegativeList = exports.MetadataKey_Negative = exports.MetadataKey_MinList = exports.MetadataKey_Min = exports.MetadataKey_MaxList = exports.MetadataKey_Max = exports.MetadataKey_FutureOrPresentList = exports.MetadataKey_FutureOrPresent = exports.MetadataKey_FutureList = exports.MetadataKey_Future = exports.MetadataKey_EmailList = exports.MetadataKey_Email = exports.MetadataKey_DecimalMinList = exports.MetadataKey_DecimalMin = exports.MetadataKey_DecimalMaxList = exports.MetadataKey_DecimalMax = exports.MetadataKey_AssertTrueList = exports.MetadataKey_AssertTrue = exports.MetadataKey_AssertFalseList = exports.MetadataKey_AssertFalse = void 0;
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: lipengxiang
- * Date: 2020-01-19 16:11
- * Desc: 仅可用于异步方法. 验证错误时, 返回错误的Msg信息.
- */
 require("reflect-metadata");
 const febs = require("febs-browser");
 const objectUtils_1 = require("../utils/objectUtils");
@@ -70,14 +64,7 @@ exports.MetadataKey_TypeObject = Symbol('MetadataKey_TypeObject');
 exports.MetadataKey_TypeObjectList = Symbol('MetadataKey_TypeObjectList');
 exports.MetadataKey_TypeArray = Symbol('MetadataKey_TypeArray');
 exports.MetadataKey_TypeArrayList = Symbol('MetadataKey_TypeArrayList');
-/**
- * @desc: 验证参数.
- * @return null表明是正确的. 否则返回错误的参数名.
- */
-function _validate_param(target, propertyName, method, argumentList, metadataKey, 
-/** propertyValue:参数值; data:注解参数 */
-validator // 返回true表明有错误.
-) {
+function _validate_param(target, propertyName, method, argumentList, metadataKey, validator) {
     let requiredParameters = _validate_get_param_matedata(metadataKey, target, propertyName);
     if (requiredParameters) {
         for (let parameterIndex of requiredParameters) {
@@ -115,9 +102,6 @@ validator // 返回true表明有错误.
     return null;
 }
 exports._validate_param = _validate_param;
-/**
- * @desc: 对方法参数设置matedata数据.
- */
 function _validate_set_param_matedata(matedataKey, target, propertyKey, parameterIndex, data) {
     let existingRequiredParameters = Reflect.getOwnMetadata(matedataKey, target, propertyKey) || [];
     existingRequiredParameters.push({ parameterIndex, data });
@@ -126,9 +110,6 @@ function _validate_set_param_matedata(matedataKey, target, propertyKey, paramete
 function _validate_get_param_matedata(matedataKey, target, propertyKey) {
     return Reflect.getOwnMetadata(matedataKey, target, propertyKey);
 }
-/**
- * @desc: 对对象属性设置matedata数据.
- */
 function doPropertyDecorator(target, propertyKey, validateFunction, decoratorData) {
     let mk = propertyKey;
     let existingRequiredParameters = Reflect.getOwnMetadata(mk, target, propertyKey) || [];
@@ -139,6 +120,8 @@ function doPropertyDecorator(target, propertyKey, validateFunction, decoratorDat
     }
     let value = target[propertyKey];
     Object.defineProperty(target, propertyKey, {
+        enumerable: true,
+        configurable: false,
         get: function () {
             return value;
         },
@@ -176,19 +159,12 @@ function doPropertyDecorator(target, propertyKey, validateFunction, decoratorDat
     });
 }
 exports.doPropertyDecorator = doPropertyDecorator;
-/**
- * @desc 获取属性修饰器. 修饰器带必须一个参数.
- * @returns {PropertyDecorator}
- */
 function getPropertyDecorator(verify, cfg) {
     return (target, propertyKey) => {
         doPropertyDecorator(target, propertyKey, verify, cfg || {});
     };
 }
 exports.getPropertyDecorator = getPropertyDecorator;
-/**
-* @desc: 当形如 `@xxx.List` 验证时使用的验证方法.
-*/
 function verifyPropertyList(propertyValues, decoratorData, verfiy) {
     let listMaxLength = Number(decoratorData.listMaxLength);
     listMaxLength = Number.isNaN(listMaxLength) ? Number.MAX_SAFE_INTEGER : listMaxLength;

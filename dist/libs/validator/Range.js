@@ -1,12 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Range = void 0;
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: brian.li
- * Date: 2020-10-13 16:15
- * Desc:
- */
 const febs = require("febs-browser");
 const validatorUtils_1 = require("./validatorUtils");
 function verify(propertyValue, decoratorData) {
@@ -30,14 +24,7 @@ function DecoratorList(cfg) {
     cfg.max = Number(cfg.max) || 0;
     return validatorUtils_1.getPropertyDecorator(verify_list, cfg);
 }
-/**
- * 验证是否是数组.
- */
 Range.List = DecoratorList;
-/**
- * @desc 指定参数值必须在 [min, max] 范围内;
- * @returns {PropertyDecorator}
- */
 function Range(cfg) {
     cfg.min = Number(cfg.min) || 0;
     cfg.max = Number(cfg.max) || 0;

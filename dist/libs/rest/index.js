@@ -1,11 +1,5 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: brian.li
- * Date: 2020-10-23 11:32
- * Desc:
- */
 var FeignClient_1 = require("./FeignClient");
 Object.defineProperty(exports, "FeignClient", { enumerable: true, get: function () { return FeignClient_1.FeignClient; } });
 Object.defineProperty(exports, "setFeignClientDefaultCfg", { enumerable: true, get: function () { return FeignClient_1.setFeignClientDefaultCfg; } });

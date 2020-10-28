@@ -1,11 +1,5 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: lipengxiang
- * Date: 2020-01-19 16:11
- * Desc:
- */
 var AssertFalse_1 = require("./AssertFalse");
 Object.defineProperty(exports, "AssertFalse", { enumerable: true, get: function () { return AssertFalse_1.AssertFalse; } });
 var AssertTrue_1 = require("./AssertTrue");
@@ -14,7 +8,6 @@ var DecimalMax_1 = require("./DecimalMax");
 Object.defineProperty(exports, "DecimalMax", { enumerable: true, get: function () { return DecimalMax_1.DecimalMax; } });
 var DecimalMin_1 = require("./DecimalMin");
 Object.defineProperty(exports, "DecimalMin", { enumerable: true, get: function () { return DecimalMin_1.DecimalMin; } });
-// export { Digits } from './Digits';
 var Email_1 = require("./Email");
 Object.defineProperty(exports, "Email", { enumerable: true, get: function () { return Email_1.Email; } });
 var Future_1 = require("./Future");

@@ -9,11 +9,11 @@
 
 import 'reflect-metadata'
 import * as febs from 'febs-browser';
-import qs from 'qs';
+var qs = require('../utils/qs/dist')
 
 const _RequestBodyMetadataKey = Symbol('_RequestBodyMetadataKey');
 
-type _RequestBodyMetadataType = { required: boolean, parameterIndex: number };
+type _RequestBodyMetadataType = { required: boolean, parameterIndex: number, stringifyCallback?: (bodyData:any)=>string, };
 
 
 /**
@@ -31,8 +31,9 @@ type _RequestBodyMetadataType = { required: boolean, parameterIndex: number };
 export function RequestBody(cfg: {
   /** 是否是必须存在; */
   required?: boolean,
+  /** 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
+  stringifyCallback?: (bodyData:any)=>string,
 }): ParameterDecorator {
-
   cfg.required = febs.utils.isNull(cfg.required) ? true : cfg.required;
   
   return (target: Object, propertyKey: string | symbol, parameterIndex: number): void => {
@@ -48,6 +49,7 @@ export function RequestBody(cfg: {
 
     Reflect.defineMetadata(_RequestBodyMetadataKey, {
       required: cfg.required,
+      stringifyCallback: cfg.stringifyCallback,
       parameterIndex,
     }, target, propertyKey);
   }
@@ -68,12 +70,15 @@ export function _RequestBodyDo(target: Object, propertyKey: string | symbol, arg
 
   let paramStr: string;
   let t = typeof argVal;
-  if (t === 'string') {
+  if (typeof parameter.stringifyCallback === 'function') {
+    paramStr = parameter.stringifyCallback(argVal)
+  }
+  else if (t === 'string') {
     paramStr = argVal;
   }
   else if (t === 'boolean' || t === 'number' || t === 'bigint') {
     paramStr = argVal.toString();
-  }
+  } 
   else {
     let isJson: boolean = false;
     if (requestMapping.method === 'GET') {
@@ -98,6 +103,10 @@ export function _RequestBodyDo(target: Object, propertyKey: string | symbol, arg
       paramStr = qs.stringify(argVal);
     }
   } // if..else.
+
+  if (febs.string.isEmpty(paramStr)) {
+    return;
+  }
 
   //
   // set to requestMapping.

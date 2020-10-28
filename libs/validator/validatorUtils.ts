@@ -197,6 +197,8 @@ export function doPropertyDecorator(
 
   let value = target[propertyKey]
   Object.defineProperty(target, propertyKey, {
+    enumerable: true,
+    configurable: false,
     get: function () {
       return value
     },

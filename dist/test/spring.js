@@ -9,12 +9,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: brian.li
- * Date: 2020-10-16 10:33
- * Desc:
- */
 const tap_1 = require("tap");
 const __1 = require("..");
 const lib_1 = require("./lib");
@@ -197,9 +191,6 @@ __decorate([
     __metadata("design:type", Object)
 ], SpringBean.prototype, "value_pastOrPresentList", void 0);
 let bean = new SpringBean();
-//--------------------------------------------------------
-// null
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_null = null;
     bean.value_null = undefined;
@@ -219,9 +210,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_nullList = '121321723427834628';
 });
-//--------------------------------------------------------
-// notnull
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_notnull = 1;
     bean.value_notnull = 0;
@@ -243,9 +231,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_notnullList = [12, undefined];
 });
-//--------------------------------------------------------
-// notblank
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_notblank = ' 1 ';
     bean.value_notblank = '12212';
@@ -271,9 +256,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_notblankList = 1231;
 });
-//--------------------------------------------------------
-// notempty
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_notempty = {
         size() {
@@ -313,9 +295,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_notemptyList = 1231;
 });
-//--------------------------------------------------------
-// size
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_size2_10 = '123131';
     bean.value_size2_10 = '12';
@@ -347,9 +326,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_size2_10List = '23424';
 });
-//--------------------------------------------------------
-// false
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_false = false;
     bean.value_false = 0;
@@ -380,9 +356,6 @@ lib_1.except_success(() => {
 lib_1.except_fail(() => {
     bean.value_falseList = [1, true];
 });
-//--------------------------------------------------------
-// true
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_true = true;
     bean.value_true = 1;
@@ -413,9 +386,6 @@ lib_1.except_success(() => {
 lib_1.except_fail(() => {
     bean.value_trueList = [1, false];
 });
-//--------------------------------------------------------
-// decimalMax
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_decimalMax = 100000000000;
     bean.value_decimalMax = 0;
@@ -438,9 +408,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_decimalMaxList = {};
 });
-//--------------------------------------------------------
-// decimalMin
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_decimalMin = 0;
     bean.value_decimalMin = 111;
@@ -464,9 +431,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_decimalMinList = {};
 });
-//--------------------------------------------------------
-// Max
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_max = 0;
     bean.value_max = -111;
@@ -492,9 +456,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_maxList = {};
 });
-//--------------------------------------------------------
-// Min
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_min = 0;
     bean.value_min = 111;
@@ -520,9 +481,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_minList = {};
 });
-//--------------------------------------------------------
-// Negative
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_negative = null;
     bean.value_negative = undefined;
@@ -550,9 +508,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_negativeList = {};
 });
-//--------------------------------------------------------
-// NegativeOrZero
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_negativeOrZero = null;
     bean.value_negativeOrZero = undefined;
@@ -582,9 +537,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_negativeOrZeroList = {};
 });
-//--------------------------------------------------------
-// positive
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_positive = null;
     bean.value_positive = undefined;
@@ -612,9 +564,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_positiveList = {};
 });
-//--------------------------------------------------------
-// positiveOrZero
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_positiveOrZero = null;
     bean.value_positiveOrZero = undefined;
@@ -644,9 +593,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_positiveOrZeroList = {};
 });
-//--------------------------------------------------------
-// range
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_range = null;
     bean.value_range = undefined;
@@ -676,9 +622,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_rangeList = {};
 });
-//--------------------------------------------------------
-// email
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_email = null;
     bean.value_email = undefined;
@@ -708,9 +651,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_emailList = {};
 });
-//--------------------------------------------------------
-// pattern
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_pattern = null;
     bean.value_pattern = undefined;
@@ -736,9 +676,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_patternList = {};
 });
-//--------------------------------------------------------
-// future
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_future = null;
     bean.value_future = undefined;
@@ -765,9 +702,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_futureList = {};
 });
-//--------------------------------------------------------
-// futureOrPresent
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_futureOrPresent = null;
     bean.value_futureOrPresent = undefined;
@@ -794,9 +728,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_futureOrPresentList = {};
 });
-//--------------------------------------------------------
-// past
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_past = null;
     bean.value_past = undefined;
@@ -823,9 +754,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_pastList = {};
 });
-//--------------------------------------------------------
-// pastOrPresent
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_pastOrPresent = null;
     bean.value_pastOrPresent = undefined;

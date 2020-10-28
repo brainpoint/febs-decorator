@@ -1,12 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports._ResponseBodyDo = exports.ResponseBody = void 0;
-/**
-* Copyright (c) 2020 Copyright bp All Rights Reserved.
-* Author: brian.li
-* Date: 2020-10-22 18:15
-* Desc:
-*/
 require("reflect-metadata");
 const febs = require("febs-browser");
 const _ResponseBodyMetadataKey = Symbol('_ResponseBodyMetadataKey');

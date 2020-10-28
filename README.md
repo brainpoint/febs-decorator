@@ -7,6 +7,13 @@ Some typescript decorators, like spring-validation and so on.
 npm i febs-decorator
 ```
 
+set config in tsconfig.json
+
+```
+"experimentalDecorators": true,
+"emitDecoratorMetadata": true,
+```
+
 ## Example
 
 
@@ -27,7 +34,7 @@ let obj = new BeanA();  // will throw a exception.
 Rest Example:
 
 ```js
-import { FeignClient, RequestMapping, RequestMethod, ResponseBody } from "febs-decorator";
+import { FeignClient, RequestMapping, RequestMethod, ResponseBody, ResponseBodyType } from "febs-decorator";
 
 @FeignClient({ name: 'base' })
 export class BaseService {

@@ -1,28 +1,10 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports._RequestBodyDo = exports.RequestBody = void 0;
-/**
-* Copyright (c) 2020 Copyright bp All Rights Reserved.
-* Author: brian.li
-* Date: 2020-10-22 18:15
-* Desc:
-*/
 require("reflect-metadata");
 const febs = require("febs-browser");
-const qs_1 = require("qs");
+var qs = require('../utils/qs/dist');
 const _RequestBodyMetadataKey = Symbol('_RequestBodyMetadataKey');
-/**
- * @desc 用于映射请求中的content body.
- *
- *  将根据 {RequestMapping} 的请求header中的Content-Type来决定body的格式化.
- *
- *  - 如果参数类型为string, 则直接作为body, 不进行格式化
- *  - 如果参数类型为object, Content-Type:application/json, 将格式化为json.
- *  - 如果参数类型为object, Content-Type:application/x-www-form-urlencoded, 将格式化为querystring.
- *  - 如果请求类型为GET, 将格式化为querystring, 附加在url上.
- *
- * @returns {ParameterDecorator}
- */
 function RequestBody(cfg) {
     cfg.required = febs.utils.isNull(cfg.required) ? true : cfg.required;
     return (target, propertyKey, parameterIndex) => {
@@ -31,6 +13,7 @@ function RequestBody(cfg) {
         }
         Reflect.defineMetadata(_RequestBodyMetadataKey, {
             required: cfg.required,
+            stringifyCallback: cfg.stringifyCallback,
             parameterIndex,
         }, target, propertyKey);
     };
@@ -49,7 +32,10 @@ function _RequestBodyDo(target, propertyKey, args, requestMapping) {
     }
     let paramStr;
     let t = typeof argVal;
-    if (t === 'string') {
+    if (typeof parameter.stringifyCallback === 'function') {
+        paramStr = parameter.stringifyCallback(argVal);
+    }
+    else if (t === 'string') {
         paramStr = argVal;
     }
     else if (t === 'boolean' || t === 'number' || t === 'bigint') {
@@ -70,18 +56,18 @@ function _RequestBodyDo(target, propertyKey, args, requestMapping) {
                     break;
                 }
             }
-        } // if..else.
+        }
         if (isJson) {
             paramStr = JSON.stringify(argVal);
         }
         else {
-            paramStr = qs_1.default.stringify(argVal);
+            paramStr = qs.stringify(argVal);
         }
-    } // if..else.
-    //
-    // set to requestMapping.
+    }
+    if (febs.string.isEmpty(paramStr)) {
+        return;
+    }
     if (requestMapping.method === 'GET') {
-        // append qs
         for (const key in requestMapping.path) {
             let p = requestMapping.path[key];
             let i = p.indexOf('?');
@@ -99,7 +85,7 @@ function _RequestBodyDo(target, propertyKey, args, requestMapping) {
     }
     else {
         requestMapping.body = paramStr;
-    } // if..else.
+    }
 }
 exports._RequestBodyDo = _RequestBodyDo;
 //# sourceMappingURL=RequestBody.js.map

@@ -1,12 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Type = void 0;
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: brian.li
- * Date: 2020-10-13 16:15
- * Desc:
- */
 const febs = require("febs-browser");
 const validatorUtils_1 = require("./validatorUtils");
 exports.Type = {
@@ -20,9 +14,6 @@ exports.Type = {
     Array: Arraya,
     Enum: Enuma,
 };
-/**
- * @desc: boolean
- */
 function validateBoolean(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
         return { propertyValue: propertyValue };
@@ -56,9 +47,6 @@ function Boolean(...args) {
     }
 }
 Boolean.List = BooleanList;
-/**
- * @desc: Number
- */
 function validateNumber(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
         return { propertyValue: propertyValue };
@@ -96,9 +84,6 @@ function Numbera(...args) {
     }
 }
 Numbera.List = NumberList;
-/**
- * @desc: Int
- */
 function validateInteger(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
         return { propertyValue: propertyValue };
@@ -133,9 +118,6 @@ function Integer(...args) {
     }
 }
 Integer.List = IntegerList;
-/**
- * @desc: BigInt
- */
 function validateBigInt(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
         return { propertyValue: propertyValue };
@@ -166,9 +148,6 @@ function BigInt(...args) {
     }
 }
 BigInt.List = BigIntList;
-/**
- * @desc: String
- */
 function validateString(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
         return { propertyValue: propertyValue };
@@ -200,9 +179,6 @@ function Stringa(...args) {
     }
 }
 Stringa.List = StringList;
-/**
- * @desc: Date
- */
 function validateDate(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
         return { propertyValue: propertyValue };
@@ -241,9 +217,6 @@ function Datea(...args) {
     }
 }
 Datea.List = DateList;
-/**
- * @desc: Object
- */
 function validateObject(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
         return { propertyValue: propertyValue };
@@ -278,9 +251,6 @@ function Objecta(...args) {
     }
 }
 Objecta.List = ObjectList;
-/**
- * @desc: Array
- */
 function validateArray(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
         return { propertyValue: propertyValue };
@@ -319,9 +289,6 @@ function Arraya(...args) {
     }
 }
 Arraya.List = ArrayList;
-/**
- * @desc: Enum
- */
 function validateEnum(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
         return { propertyValue: propertyValue };
@@ -339,13 +306,6 @@ function validateEnum_list(propertyValue, decoratorData) {
 function EnumList(cfg) {
     return validatorUtils_1.getPropertyDecorator(validateEnum_list, cfg);
 }
-/**
- * @desc: 判断是否是指定的枚举类型
- *
- * @param cfg 可以传递checkCB(elem:any, index:number)=>boolean 对每个元素的类型进行判断.
- *
- * @return:
- */
 function Enuma(cfg) {
     return validatorUtils_1.getPropertyDecorator(validateEnum, cfg);
 }

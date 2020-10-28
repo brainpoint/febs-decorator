@@ -1,12 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PastOrPresent = void 0;
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: brian.li
- * Date: 2020-10-13 16:15
- * Desc:
- */
 const febs = require("febs-browser");
 const validatorUtils_1 = require("./validatorUtils");
 function verify(propertyValue, decoratorData) {
@@ -43,9 +37,6 @@ function DecoratorList(...args) {
         validatorUtils_1.doPropertyDecorator(args[0], args[1], verify_list, {});
     }
 }
-/**
- * 验证是否是数组.
- */
 PastOrPresent.List = DecoratorList;
 function PastOrPresent(...args) {
     if (args.length == 1 || args.length == 0) {

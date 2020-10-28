@@ -35,9 +35,6 @@ __decorate([
     __metadata("design:type", Object)
 ], EnumBean.prototype, "value_enumTypeList", void 0);
 let bean = new EnumBean();
-//--------------------------------------------------------
-// enum
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_enum = null;
     bean.value_enum = undefined;
@@ -65,9 +62,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_enumList = 1;
 });
-//--------------------------------------------------------
-// enumList
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_enumType = null;
     bean.value_enumType = undefined;

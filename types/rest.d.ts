@@ -109,6 +109,8 @@ export function PathVariable(cfg: {
 export function RequestBody(cfg: {
   /** 是否是必须存在; */
   required?: boolean,
+  /** 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
+  stringifyCallback?: (bodyData:any)=>string,
 }): ParameterDecorator;
 
 

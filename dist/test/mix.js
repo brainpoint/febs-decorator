@@ -20,9 +20,6 @@ __decorate([
     __metadata("design:type", Object)
 ], MixBean.prototype, "value_notnullList", void 0);
 let bean = new MixBean();
-//--------------------------------------------------------
-// notnull
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_notnullList = [1, 2, 3, '123123'];
 });

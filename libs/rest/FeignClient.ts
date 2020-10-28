@@ -10,7 +10,7 @@
 import 'reflect-metadata'
 import * as path from 'path'
 import * as febs from 'febs-browser'
-import qs from 'qs'
+var qs = require('../utils/qs/dist')
 
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg')
 

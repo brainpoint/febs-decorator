@@ -10,32 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports._FeignClientDo = exports.FeignClient = exports.setFeignClientDefaultCfg = exports._FeignClientMetadataKey = void 0;
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: brian.li
- * Date: 2020-10-22 18:15
- * Desc:
- */
 require("reflect-metadata");
 const path = require("path");
 const febs = require("febs-browser");
-const qs_1 = require("qs");
+var qs = require('../utils/qs/dist');
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg');
 exports._FeignClientMetadataKey = Symbol('_FeignClientMetadataKey');
-/**
- * @desc: 设置默认的请求配置. 可用于设置fetch对象, 重试信息等.
- *
- *     负载均衡策略由 findServiceCallback 提供.
- *
- * @example
- *   import * as fetch from 'node-fetch'
- *   setFeignClientDefaultCfg({
- *      fetchObj:fetch,
- *      findServiceCallback(serviceName, excludeHost):Promise<ip:string, port:number>=> {
- *        return Promise.resolve({ip, port});
- *      }
- *   });
- */
 function setFeignClientDefaultCfg(cfg) {
     let c = global[DefaultFeignClientCfg];
     if (!c) {
@@ -68,13 +48,6 @@ function getFeignClientDefaultCfg() {
     cfg.maxAutoRetries = cfg.maxAutoRetries || 2;
     return cfg;
 }
-/**
- * @desc 表明指定的类为feignClient类.
- *
- *      仅支持service返回格式为 application/json或application/x-www-form-urlencoded.
- *
- * @returns {ClassDecorator}
- */
 function FeignClient(cfg) {
     if (febs.string.isEmpty(cfg.name)) {
         throw new febs.exception("@FeignClient need 'name' parameter", febs.exception.ERROR, __filename, __line, __column);
@@ -107,7 +80,6 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
             throw new febs.exception(`feignClient 'findServiceCallback' must not be null`, febs.exception.ERROR, __filename, __line, __column);
         }
         let excludeHost = null;
-        // net request.
         for (let i = 0; i < feignClientCfg.maxAutoRetriesNextServer; i++) {
             let host = yield feignClientCfg.findServiceCallback(meta.name, excludeHost);
             if (!host) {
@@ -138,7 +110,6 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
                         credentials: requestMapping.credentials,
                         body: requestMapping.body,
                     });
-                    // ok.
                     let contentType = ret.headers.get('content-type');
                     if (contentType) {
                         if (Array.isArray(contentType)) {
@@ -150,7 +121,7 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
                         }
                         else {
                             let txt = yield ret.text();
-                            r = qs_1.default.parse(txt);
+                            r = qs.parse(txt);
                         }
                     }
                 }
@@ -158,7 +129,6 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
                     console.error(e);
                     continue;
                 }
-                // 返回对象.
                 try {
                     if (!r) {
                         return r;
@@ -197,8 +167,8 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
                     }
                     return yield fallback();
                 }
-            } // for.
-        } // for.
+            }
+        }
         return yield fallback();
     });
 }

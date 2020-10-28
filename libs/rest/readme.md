@@ -287,6 +287,17 @@ let obj = new DemoService();
 await obj.request('hello');
 ```
 
+默认情况下会根据content-type进行字符串化, 如果需要自定义处理, 可以按如下方式传递字符串化处理方法.
+
+```js
+@RequestBody({
+  /** 是否是必须存在 */
+  required: true,
+  /** 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
+  stringifyCallback: (bodyData:any):string=>JSON.stringify(bodyData)
+}) body: any
+```
+
 
 ## 对响应内容进行处理.
 

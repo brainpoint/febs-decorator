@@ -1,12 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Enum = void 0;
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: brian.li
- * Date: 2020-10-13 16:15
- * Desc:
- */
 const febs = require("febs-browser");
 const validatorUtils_1 = require("./validatorUtils");
 function verify(propertyValue, decoratorData) {
@@ -29,14 +23,7 @@ function DecoratorList(cfg) {
     }
     return validatorUtils_1.getPropertyDecorator(verify_list, cfg);
 }
-/**
- * 验证是否是数组.
- */
 Enum.List = DecoratorList;
-/**
- * @desc 验证参数是否配置允许的值之一.
- * @returns {PropertyDecorator}
- */
 function Enum(cfg) {
     if (!Array.isArray(cfg.allows)) {
         throw new febs.exception('verify @Enum allows error', febs.exception.ERROR, __filename, __line, __column);

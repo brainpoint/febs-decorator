@@ -9,7 +9,7 @@
 
 import 'reflect-metadata'
 import * as febs from 'febs-browser';
-import queryString from 'qs';
+var queryString = require('../utils/qs/dist')
 
 const _RequestParamMetadataKey = Symbol('_RequestParamMetadataKey');
 

@@ -8,6 +8,7 @@
 import tap from 'tap'
 import { Type } from '..'
 import { except_fail, except_success } from './lib'
+var qs = require('../libs/utils/qs/dist')
 
 class TypeBean {
   @Type.BigInt
@@ -308,7 +309,6 @@ except_fail(
     bean.value_stringList = '23424'
   }
 )
-
 
 //--------------------------------------------------------
 // Date

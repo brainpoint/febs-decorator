@@ -1,9 +1,7 @@
 {
   "description": "Some typescript decorator which use in front-end and back-end",
   "dependencies": {
-    "@types/qs": "^6.9.5",
     "febs-browser": "^1.0.11",
-    "qs": "^6.9.4",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
@@ -17,8 +15,8 @@
     "url": "git+ssh://git@github.com/brainpoint/febs-decorator.git"
   },
   "scripts": {
-    "test": "tsc --build tsconfig.json && tap dist/test/*.js",
-    "prepublishOnly": "tsc --build tsconfig.json"
+    "test": "tsc --build tsconfig.json && cp -rf libs/utils/qs dist/libs/utils && tap dist/test/type.js",
+    "prepublishOnly": "tsc --build tsconfig.json && cp -rf libs/utils/qs dist/libs/utils"
   },
   "keywords": [
     "decorator",
@@ -54,5 +52,5 @@
     }
   ],
   "name": "febs-decorator",
-  "version": "0.1.1"
+  "version": "0.1.2"
 }

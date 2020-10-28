@@ -18,15 +18,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// import * as febs from 'febs';
 const __1 = require("..");
-/**
- * 定义feignClient对象.
- */
 let TestController = class TestController {
     test() {
         return __awaiter(this, void 0, void 0, function* () {
-            // fallback.
             return 'fail';
         });
     }
@@ -42,22 +37,15 @@ TestController = __decorate([
 ], TestController);
 function test() {
     return __awaiter(this, void 0, void 0, function* () {
-        // initial feignClient.
         __1.setFeignClientDefaultCfg({
-            // fetchObj: febs.net.fetch,
             findServiceCallback,
         });
-        // call request.
         let bean = new TestController();
         console.log(yield bean.test());
     });
 }
 test().then(() => { });
-/**
-* @desc:返回指定服务地址.
-*/
 function findServiceCallback(serviceName, excludeHost) {
-    // use nacos or eureka api to get a host.
     return Promise.resolve({
         ip: '127.0.0.1',
         port: 8080

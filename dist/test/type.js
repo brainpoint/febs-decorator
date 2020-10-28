@@ -9,15 +9,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Copyright (c) 2020 Copyright bp All Rights Reserved.
- * Author: brian.li
- * Date: 2020-10-16 10:33
- * Desc:
- */
 const tap_1 = require("tap");
 const __1 = require("..");
 const lib_1 = require("./lib");
+var qs = require('../libs/utils/qs/dist');
 class TypeBean {
 }
 __decorate([
@@ -91,9 +86,6 @@ __decorate([
     __metadata("design:type", Object)
 ], TypeBean.prototype, "value_arrayList", void 0);
 let bean = new TypeBean();
-//--------------------------------------------------------
-// bigint
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_bigInt = 1;
     bean.value_bigInt = -1;
@@ -122,9 +114,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_bigIntList = '121321723427834628';
 });
-//--------------------------------------------------------
-// boolean
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_boolean = 1;
     bean.value_boolean = 0;
@@ -160,9 +149,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_booleanList = true;
 });
-//--------------------------------------------------------
-// Integer
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_integer = 1;
     bean.value_integer = 0;
@@ -198,9 +184,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_integerList = 1231;
 });
-//--------------------------------------------------------
-// number
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_number = 1;
     bean.value_number = 0;
@@ -246,9 +229,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_numberList = 1231;
 });
-//--------------------------------------------------------
-// string
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_string = '123131';
     bean.value_string = null;
@@ -272,9 +252,8 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_stringList = '23424';
 });
-//--------------------------------------------------------
-// Date
-//--------------------------------------------------------
+bean.value_date = '2009-06-15T08:00:00.000Z';
+console.log(qs.stringify({ a: bean.value_date }));
 lib_1.except_success(() => {
     bean.value_date = new Date();
     bean.value_date = '2009-06-15T08:00:00.000Z';
@@ -300,9 +279,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_dateList = new Date();
 });
-//--------------------------------------------------------
-// Object
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_object = {};
     bean.value_object = new Date();
@@ -324,9 +300,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_objectList = {};
 });
-//--------------------------------------------------------
-// Array
-//--------------------------------------------------------
 lib_1.except_success(() => {
     bean.value_array = [];
     bean.value_array = new Array(4);
