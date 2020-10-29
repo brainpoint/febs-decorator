@@ -13,8 +13,10 @@ import { _PathVariableDo } from './PathVariable';
 import { _FeignClientDo, _FeignClientMetadataKey } from './FeignClient';
 import { _RequestBodyDo } from './RequestBody';
 import { _RequestParamDo } from './RequestParam';
-import { _ResponseBodyDo } from './ResponseBody';
+import { _RestObjectDo } from './RestObject';
+import { _RestControllerDo, _RestControllerMetadataKey, _RestControllerPushRouter } from './RestController';
 
+const _RequestMappingParamsMetadataKey = Symbol('_RequestMappingParamsMetadataKey')
 const DefaultRequestCfg = Symbol('DefaultRequestCfg');
 
 // export type RequestMappingMetadataType = {
@@ -76,7 +78,7 @@ export enum RequestMethod {
  * @returns {MethodDecorator}
  */
 export function PostMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -84,6 +86,8 @@ export function PostMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定response或request的数据类型 */
+  dataType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.POST));
 }
@@ -94,7 +98,7 @@ export function PostMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function PutMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?的qs */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -102,6 +106,8 @@ export function PutMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定response或request的数据类型 */
+  dataType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.PUT));
 }
@@ -112,7 +118,7 @@ export function PutMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function PatchMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -120,6 +126,8 @@ export function PatchMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定response或request的数据类型 */
+  dataType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.PATCH));
 }
@@ -130,7 +138,7 @@ export function PatchMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function GetMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -138,6 +146,8 @@ export function GetMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定response或request的数据类型 */
+  dataType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.GET));
 }
@@ -148,7 +158,7 @@ export function GetMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function DeleteMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -156,6 +166,8 @@ export function DeleteMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定response或request的数据类型 */
+  dataType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.DELETE));
 }
@@ -166,7 +178,7 @@ export function DeleteMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function RequestMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 默认为 GET */
   method?: RequestMethod,
@@ -175,7 +187,9 @@ export function RequestMapping(cfg: {
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
-  credentials?: 'include'|null,
+  credentials?: 'include' | null,
+  /** 指定response或request的数据类型 */
+  dataType?: any,
 }): MethodDecorator {
 
   let cpath = Array.isArray(cfg.path) ? cfg.path : [cfg.path];
@@ -206,10 +220,43 @@ export function RequestMapping(cfg: {
   let pathVariables = getPathVariables(cpath);
   
   return function (target: Object, propertyKey: string | symbol, descriptor: PropertyDescriptor): void {
+
+    _RestControllerPushRouter(target, target.constructor, {
+      path: cfg.path,
+      functionPropertyKey: propertyKey,
+      params: _GetRequestMappingParams(target)
+    });
+
     let method = descriptor.value;
     descriptor.value = function () {
+
+      // RestController.
+      let isRestControllerClass: boolean = !!Reflect.hasOwnMetadata(_RestControllerMetadataKey, target.constructor);
+      if (isRestControllerClass) {
+        let cfgp: {
+          pathname: string,
+          querystring: any,
+          request: any,
+          response: any,
+          params: {
+            name?: string;
+            required?: boolean;
+            parameterIndex?: number;
+            defaultValue?: any;
+            type: "pv" | "rb" | "rp" | "ro";
+          }[],
+          pathVars?: { [name: string]: number },
+        } = arguments[0];
+        if (_RestControllerDo(target, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars)) {
+          return method.apply(this, arguments);
+        }
+        else {
+          return;
+        }
+      }
+
       // FeignClient.
-      let isFeignClientClass: boolean = Reflect.hasOwnMetadata(_FeignClientMetadataKey, target.constructor);
+      let isFeignClientClass: boolean = !!Reflect.hasOwnMetadata(_FeignClientMetadataKey, target.constructor);
 
       //
       // PathVariable
@@ -242,15 +289,15 @@ export function RequestMapping(cfg: {
       _RequestParamDo(target, propertyKey, arguments, requestMappingParam);
 
       //
-      // ResponseBody.
+      // RestObject.
       //
-      let respBody = _ResponseBodyDo(target, propertyKey, arguments);
+      let restObject = _RestObjectDo(target, propertyKey, arguments);
 
       //
       // feignClient.
       //
       if (isFeignClientClass) {
-        return _FeignClientDo(target, requestMappingParam, respBody, arguments, () => method.apply(this, arguments));
+        return _FeignClientDo(target, requestMappingParam, restObject, cfg.dataType, arguments, () => method.apply(this, arguments));
       } else {
         return method.apply(this, arguments);
       }
@@ -323,4 +370,48 @@ function setPathVariables(urlPaths: string[], pathVariables:{ [key: string]: str
     }
   }
   return urlPaths;
+}
+
+
+/**
+ * @desc 将参数信息存储到target.
+ */
+export function _GetRequestMappingParams(target: Object): {
+    name?: string,
+    required?: boolean,
+    parameterIndex?: number,
+    defaultValue?: any,
+    type: 'pv' | 'rb' | 'rp' | 'ro'
+}[]
+{
+  return Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target);
+}
+
+
+/**
+ * @desc 将参数信息存储到target.
+ */
+export function _RequestMappingPushParams(target: Object, cfg: {
+  name?: string,
+  required?: boolean,
+  parameterIndex?: number,
+  defaultValue?: any,
+  type: 'pv'|'rb'|'rp'|'ro'
+}): void {
+
+  let routers: {
+    name?: string,
+    required?: boolean,
+    parameterIndex?: number,
+    defaultValue?: any,
+    type: 'pv' | 'rb' | 'rp' | 'ro'
+  }[] = Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target) || [];
+
+  routers.push(cfg);
+
+  Reflect.defineMetadata(
+    _RequestMappingParamsMetadataKey,
+    routers,
+    target
+  )
 }

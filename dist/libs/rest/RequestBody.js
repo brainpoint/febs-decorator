@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports._RequestBodyDo = exports.RequestBody = void 0;
 require("reflect-metadata");
 const febs = require("febs-browser");
+const RequestMapping_1 = require("./RequestMapping");
 var qs = require('../utils/qs/dist');
 const _RequestBodyMetadataKey = Symbol('_RequestBodyMetadataKey');
 function RequestBody(cfg) {
@@ -16,6 +17,11 @@ function RequestBody(cfg) {
             stringifyCallback: cfg.stringifyCallback,
             parameterIndex,
         }, target, propertyKey);
+        RequestMapping_1._RequestMappingPushParams(target, {
+            required: cfg.required,
+            parameterIndex,
+            type: 'rb'
+        });
     };
 }
 exports.RequestBody = RequestBody;

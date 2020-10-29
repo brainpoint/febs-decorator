@@ -9,6 +9,7 @@
 
 import 'reflect-metadata'
 import * as febs from 'febs-browser';
+import { _RequestMappingPushParams } from './RequestMapping';
 var qs = require('../utils/qs/dist')
 
 const _RequestBodyMetadataKey = Symbol('_RequestBodyMetadataKey');
@@ -31,7 +32,7 @@ type _RequestBodyMetadataType = { required: boolean, parameterIndex: number, str
 export function RequestBody(cfg: {
   /** 是否是必须存在; */
   required?: boolean,
-  /** 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
+  /** (用于request) 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
   stringifyCallback?: (bodyData:any)=>string,
 }): ParameterDecorator {
   cfg.required = febs.utils.isNull(cfg.required) ? true : cfg.required;
@@ -52,6 +53,12 @@ export function RequestBody(cfg: {
       stringifyCallback: cfg.stringifyCallback,
       parameterIndex,
     }, target, propertyKey);
+
+    _RequestMappingPushParams(target, {
+      required: cfg.required,
+      parameterIndex,
+      type: 'rb'
+    });
   }
 }
 

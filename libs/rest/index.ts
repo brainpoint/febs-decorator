@@ -21,4 +21,5 @@ export {
   setRequestMappingDefaultCfg,
 } from './RequestMapping'
 export { RequestParam } from './RequestParam'
-export { ResponseBody, ResponseBodyType } from './ResponseBody'
+export { RestObject, RestObjectType } from './RestObject'
+export { setRestControllerDefaultCfg, RestController, CallRestControllerRoute } from './RestController'

@@ -9,6 +9,7 @@
 
 import 'reflect-metadata'
 import * as febs from 'febs-browser';
+import { _RequestMappingPushParams } from './RequestMapping';
 
 const _PathVariableMetadataKey = Symbol('_PathVariableMetadataKey');
 
@@ -18,8 +19,6 @@ type _PathVariableMetadataType = { name: string, required: boolean, parameterInd
  * @desc 用于映射请求路径中的参数.
  * 
  * @example
- * 
- *       // url: /contacts/xxx 
  * 
  *       ﹫RequestMapping({path: "/contacts/{contactname}"}) 
  *       foo(﹫PathVariable("contactname") contactname: string) { 
@@ -53,6 +52,13 @@ export function PathVariable(cfg: {
       parameterIndex
     });
     Reflect.defineMetadata(_PathVariableMetadataKey, existingParameters, target, propertyKey);
+
+    _RequestMappingPushParams(target, {
+      name: cfg.name,
+      required: cfg.required,
+      parameterIndex,
+      type: 'pv'
+    });
   }
 }
 

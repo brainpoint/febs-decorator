@@ -10,6 +10,7 @@
 import 'reflect-metadata'
 import * as path from 'path'
 import * as febs from 'febs-browser'
+import { Fetch } from '@/types/fetch'
 var qs = require('../utils/qs/dist')
 
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg')
@@ -29,7 +30,7 @@ type _FeignClientMetadataType = {
  * @example
  *   import * as fetch from 'node-fetch'
  *   setFeignClientDefaultCfg({
- *      fetchObj:fetch,
+ *      fetch:fetch,
  *      findServiceCallback(serviceName, excludeHost):Promise<ip:string, port:number>=> {
  *        return Promise.resolve({ip, port}); 
  *      }
@@ -37,7 +38,7 @@ type _FeignClientMetadataType = {
  */
 export function setFeignClientDefaultCfg(cfg: {
   /** 网络请求对象, 当在back-end使用时需设置; 可使用 node-fetch等兼容api */
-  fetchObj?: any
+  fetch?: Fetch
   /** 最大更换实例次数; (默认3) */
   maxAutoRetriesNextServer?: number
   /** 同一实例的重试次数; (默认2) */
@@ -59,8 +60,8 @@ export function setFeignClientDefaultCfg(cfg: {
     (global as any)[DefaultFeignClientCfg] = c;
   }
   c = c || {}
-  if (cfg.hasOwnProperty('fetchObj')) {
-    c.fetchObj = cfg.fetchObj
+  if (cfg.hasOwnProperty('fetch')) {
+    c.fetch = cfg.fetch
   }
   if (cfg.hasOwnProperty('maxAutoRetriesNextServer')) {
     c.maxAutoRetriesNextServer = cfg.maxAutoRetriesNextServer;
@@ -78,7 +79,7 @@ export function setFeignClientDefaultCfg(cfg: {
 }
 
 function getFeignClientDefaultCfg(): {
-  fetchObj?: any
+  fetch?: Fetch
   maxAutoRetriesNextServer?: number
   maxAutoRetries?: number,
   findServiceCallback: (
@@ -92,7 +93,7 @@ function getFeignClientDefaultCfg(): {
 } {
   let cfg = (global as any)[DefaultFeignClientCfg]
   cfg = cfg || {}
-  cfg.fetchObj = cfg.fetchObj || febs.net.fetch
+  cfg.fetch = cfg.fetch || febs.net.fetch
   cfg.maxAutoRetriesNextServer = cfg.maxAutoRetriesNextServer || 3
   cfg.maxAutoRetries = cfg.maxAutoRetries || 2
   return cfg
@@ -101,7 +102,7 @@ function getFeignClientDefaultCfg(): {
 /**
  * @desc 表明指定的类为feignClient类.
  *
- *      仅支持service返回格式为 application/json或application/x-www-form-urlencoded.
+ *      仅支持service返回格式为 application/json或application/x-www-form-urlencoded; 其他格式返回字节流
  *
  * @returns {ClassDecorator}
  */
@@ -140,7 +141,8 @@ export function FeignClient(cfg: {
 export async function _FeignClientDo(
   target: Object,
   requestMapping: any,
-  responseBody: { parameterIndex: number, type: any },
+  restObject: { parameterIndex: number },
+  dataType: any,
   args: IArguments,
   fallback: () => Promise<any>
 ):Promise<any> {
@@ -171,14 +173,24 @@ export async function _FeignClientDo(
     throw new febs.exception(`feignClient 'findServiceCallback' must not be null`, febs.exception.ERROR, __filename, __line, __column);
   }
 
-  let excludeHost:string = null;
+  let excludeHost: string = null;
+  let request: any;
+  let response: any;
+  let responseMsg: any;
+  let lastError: any;
+
   // net request.
   for (let i = 0; i < feignClientCfg.maxAutoRetriesNextServer; i++) {
-    let host:{
-        ip: string;
-        port: number;
-    } = await feignClientCfg.findServiceCallback(meta.name, excludeHost);
-    if (!host) {
+    let host: {
+      ip: string;
+      port: number;
+    };
+    try {
+      host = await feignClientCfg.findServiceCallback(meta.name, excludeHost);
+      if (!host) {
+        continue;
+      }
+    } catch (e) {
       continue;
     }
     
@@ -191,32 +203,48 @@ export async function _FeignClientDo(
       if (uri[0] == '/') uri = 'http:/' + uri;
       else uri = 'http://' + uri;
     }
+
+    request = {
+      method: requestMapping.method.toString(),
+      mode: requestMapping.mode,
+      headers: requestMapping.headers,
+      timeout: requestMapping.timeout,
+      credentials: requestMapping.credentials,
+      body: requestMapping.body,
+      url: uri,
+    }
     
     for (let j = 0; j < feignClientCfg.maxAutoRetries; j++) {
       let r:any;
       try {
-        let ret = await feignClientCfg.fetchObj(uri, {
-          method: requestMapping.method.toString(),
-          mode: requestMapping.mode,
-          headers: requestMapping.headers,
-          timeout: requestMapping.timeout,
-          credentials: requestMapping.credentials,
-          body: requestMapping.body,
-        });
+
+        response = null;
+        responseMsg = null;
+        lastError = null;
+        
+        let ret = await feignClientCfg.fetch(uri, request);
+        response = ret;
 
         // ok.
-        let contentType = ret.headers.get('content-type')
-        if (contentType) {
-          if (Array.isArray(contentType)) { contentType = contentType[0]; }
-          contentType = contentType.toLowerCase()
-          if (contentType.indexOf('application/json') >= 0) {
-            r = await ret.json();
-          } else {
-            let txt = await ret.text();
-            r = qs.parse(txt)
-          }
+        let contentType = ret.headers.get('content-type') || null;
+        if (Array.isArray(contentType)) { contentType = contentType[0]; }
+        contentType = contentType ? contentType.toLowerCase() : contentType;
+        // formdata.
+        if (febs.string.isEmpty(contentType) || contentType.indexOf('application/x-www-form-urlencoded') >= 0) {
+          let txt = await ret.text();
+          r = qs.parse(txt)
         }
+        // json.
+        else if (contentType.indexOf('application/json') >= 0) {
+          r = await ret.json();
+        }
+        // stream.
+        else {
+          r = await ret.blob();
+        }
+        responseMsg = r;
       } catch (e) {
+        lastError = e;
         console.error(e);
         continue;
       }
@@ -226,7 +254,7 @@ export async function _FeignClientDo(
         if (!r) {
           return r;
         }
-        else if (!responseBody || !responseBody.type) {
+        else if (!dataType) {
           if (feignClientCfg.filterMessageCallback) {
             let rr = {};
             feignClientCfg.filterMessageCallback(r, rr);
@@ -236,7 +264,7 @@ export async function _FeignClientDo(
             return r;
           }
         } else {
-          let o = new responseBody.type();
+          let o = new dataType();
           if (feignClientCfg.filterMessageCallback) {
             feignClientCfg.filterMessageCallback(r, o);
             return o;
@@ -250,16 +278,32 @@ export async function _FeignClientDo(
           return o;
         }
       } catch (e) {
-        if (responseBody) {
-          if (args.length <= responseBody.parameterIndex) {
+        if (restObject) {
+          if (args.length <= restObject.parameterIndex) {
             args.length = args.length + 1;
           }
-          args[responseBody.parameterIndex] = { sourceMessage: r, error: e };
+          args[restObject.parameterIndex] = {
+            request,
+            response,
+            responseMsg: responseMsg,
+            error: e,
+          };
         }
         return await fallback();
       }
     } // for.
   } // for.
 
+  if (restObject) {
+    if (args.length <= restObject.parameterIndex) {
+      args.length = args.length + 1;
+    }
+    args[restObject.parameterIndex] = {
+      request,
+      response,
+      responseMsg: responseMsg,
+      error: lastError,
+    };
+  }
   return await fallback();
 }

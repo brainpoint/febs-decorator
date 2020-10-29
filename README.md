@@ -34,19 +34,19 @@ let obj = new BeanA();  // will throw a exception.
 Rest Example:
 
 ```js
-import { FeignClient, RequestMapping, RequestMethod, ResponseBody, ResponseBodyType } from "febs-decorator";
+import { RestController, RequestMapping, RequestMethod } from "febs-decorator";
 
-@FeignClient({ name: 'base' })
+@RestController()
 export class BaseService {
-
-  @RequestMapping({ path: '/api', method: RequestMethod.GET })
-  async request(@ResponseBody(BeanDemo) resp ?: ResponseBodyType): Promise<BeanDemo> {
+  @RequestMapping({ path: '/api', method: RequestMethod.GET, dataType: BeanDemo })
+  async request(): Promise<BeanDemo> {
     // fallback.
-    console.log(resp.sourceMessage) // sourceMessage.
-    console.log(resp.error) // error.
     throw new Error('Message Error');
   }
 }
+
+// request
+let result:BeanDemo = new BaseService().request(); 
 ```
 
 ## Reference

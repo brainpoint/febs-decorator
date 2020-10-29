@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports._PathVariableDo = exports.PathVariable = void 0;
 require("reflect-metadata");
 const febs = require("febs-browser");
+const RequestMapping_1 = require("./RequestMapping");
 const _PathVariableMetadataKey = Symbol('_PathVariableMetadataKey');
 function PathVariable(cfg) {
     if (febs.string.isEmpty(cfg.name)) {
@@ -17,6 +18,12 @@ function PathVariable(cfg) {
             parameterIndex
         });
         Reflect.defineMetadata(_PathVariableMetadataKey, existingParameters, target, propertyKey);
+        RequestMapping_1._RequestMappingPushParams(target, {
+            name: cfg.name,
+            required: cfg.required,
+            parameterIndex,
+            type: 'pv'
+        });
     };
 }
 exports.PathVariable = PathVariable;

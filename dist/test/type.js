@@ -252,8 +252,6 @@ lib_1.except_fail(() => {
 }, () => {
     bean.value_stringList = '23424';
 });
-bean.value_date = '2009-06-15T08:00:00.000Z';
-console.log(qs.stringify({ a: bean.value_date }));
 lib_1.except_success(() => {
     bean.value_date = new Date();
     bean.value_date = '2009-06-15T08:00:00.000Z';

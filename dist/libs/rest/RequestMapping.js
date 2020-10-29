@@ -1,13 +1,15 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RequestMapping = exports.DeleteMapping = exports.GetMapping = exports.PatchMapping = exports.PutMapping = exports.PostMapping = exports.RequestMethod = exports.setRequestMappingDefaultCfg = void 0;
+exports._RequestMappingPushParams = exports._GetRequestMappingParams = exports.RequestMapping = exports.DeleteMapping = exports.GetMapping = exports.PatchMapping = exports.PutMapping = exports.PostMapping = exports.RequestMethod = exports.setRequestMappingDefaultCfg = void 0;
 require("reflect-metadata");
 const febs = require("febs-browser");
 const PathVariable_1 = require("./PathVariable");
 const FeignClient_1 = require("./FeignClient");
 const RequestBody_1 = require("./RequestBody");
 const RequestParam_1 = require("./RequestParam");
-const ResponseBody_1 = require("./ResponseBody");
+const RestObject_1 = require("./RestObject");
+const RestController_1 = require("./RestController");
+const _RequestMappingParamsMetadataKey = Symbol('_RequestMappingParamsMetadataKey');
 const DefaultRequestCfg = Symbol('DefaultRequestCfg');
 function setRequestMappingDefaultCfg(cfg) {
     global[DefaultRequestCfg] = {
@@ -65,9 +67,24 @@ function RequestMapping(cfg) {
     cfg.method = cfg.method || RequestMethod.GET;
     let pathVariables = getPathVariables(cpath);
     return function (target, propertyKey, descriptor) {
+        RestController_1._RestControllerPushRouter(target, target.constructor, {
+            path: cfg.path,
+            functionPropertyKey: propertyKey,
+            params: _GetRequestMappingParams(target)
+        });
         let method = descriptor.value;
         descriptor.value = function () {
-            let isFeignClientClass = Reflect.hasOwnMetadata(FeignClient_1._FeignClientMetadataKey, target.constructor);
+            let isRestControllerClass = !!Reflect.hasOwnMetadata(RestController_1._RestControllerMetadataKey, target.constructor);
+            if (isRestControllerClass) {
+                let cfgp = arguments[0];
+                if (RestController_1._RestControllerDo(target, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars)) {
+                    return method.apply(this, arguments);
+                }
+                else {
+                    return;
+                }
+            }
+            let isFeignClientClass = !!Reflect.hasOwnMetadata(FeignClient_1._FeignClientMetadataKey, target.constructor);
             if (!PathVariable_1._PathVariableDo(target, propertyKey, arguments, pathVariables)) {
                 return;
             }
@@ -84,9 +101,9 @@ function RequestMapping(cfg) {
             };
             RequestBody_1._RequestBodyDo(target, propertyKey, arguments, requestMappingParam);
             RequestParam_1._RequestParamDo(target, propertyKey, arguments, requestMappingParam);
-            let respBody = ResponseBody_1._ResponseBodyDo(target, propertyKey, arguments);
+            let restObject = RestObject_1._RestObjectDo(target, propertyKey, arguments);
             if (isFeignClientClass) {
-                return FeignClient_1._FeignClientDo(target, requestMappingParam, respBody, arguments, () => method.apply(this, arguments));
+                return FeignClient_1._FeignClientDo(target, requestMappingParam, restObject, cfg.dataType, arguments, () => method.apply(this, arguments));
             }
             else {
                 return method.apply(this, arguments);
@@ -143,4 +160,14 @@ function setPathVariables(urlPaths, pathVariables) {
     }
     return urlPaths;
 }
+function _GetRequestMappingParams(target) {
+    return Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target);
+}
+exports._GetRequestMappingParams = _GetRequestMappingParams;
+function _RequestMappingPushParams(target, cfg) {
+    let routers = Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target) || [];
+    routers.push(cfg);
+    Reflect.defineMetadata(_RequestMappingParamsMetadataKey, routers, target);
+}
+exports._RequestMappingPushParams = _RequestMappingPushParams;
 //# sourceMappingURL=RequestMapping.js.map

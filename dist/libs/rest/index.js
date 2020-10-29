@@ -18,6 +18,10 @@ Object.defineProperty(exports, "RequestMethod", { enumerable: true, get: functio
 Object.defineProperty(exports, "setRequestMappingDefaultCfg", { enumerable: true, get: function () { return RequestMapping_1.setRequestMappingDefaultCfg; } });
 var RequestParam_1 = require("./RequestParam");
 Object.defineProperty(exports, "RequestParam", { enumerable: true, get: function () { return RequestParam_1.RequestParam; } });
-var ResponseBody_1 = require("./ResponseBody");
-Object.defineProperty(exports, "ResponseBody", { enumerable: true, get: function () { return ResponseBody_1.ResponseBody; } });
+var RestObject_1 = require("./RestObject");
+Object.defineProperty(exports, "RestObject", { enumerable: true, get: function () { return RestObject_1.RestObject; } });
+var RestController_1 = require("./RestController");
+Object.defineProperty(exports, "setRestControllerDefaultCfg", { enumerable: true, get: function () { return RestController_1.setRestControllerDefaultCfg; } });
+Object.defineProperty(exports, "RestController", { enumerable: true, get: function () { return RestController_1.RestController; } });
+Object.defineProperty(exports, "CallRestControllerRoute", { enumerable: true, get: function () { return RestController_1.CallRestControllerRoute; } });
 //# sourceMappingURL=index.js.map

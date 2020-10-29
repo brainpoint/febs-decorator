@@ -9,6 +9,7 @@
 
 import 'reflect-metadata'
 import * as febs from 'febs-browser';
+import { _RequestMappingPushParams } from './RequestMapping';
 var queryString = require('../utils/qs/dist')
 
 const _RequestParamMetadataKey = Symbol('_RequestParamMetadataKey');
@@ -59,6 +60,14 @@ export function RequestParam(cfg: {
       parameterIndex,
     });
     Reflect.defineMetadata(_RequestParamMetadataKey, existingParameters, target, propertyKey);
+
+    _RequestMappingPushParams(target, {
+      name: cfg.name,
+      required: cfg.required,
+      defaultValue: cfg.defaultValue,
+      parameterIndex,
+      type: 'rp'
+    });
   }
 }
 

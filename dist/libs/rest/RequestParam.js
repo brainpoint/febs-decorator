@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports._RequestParamDo = exports.RequestParam = void 0;
 require("reflect-metadata");
 const febs = require("febs-browser");
+const RequestMapping_1 = require("./RequestMapping");
 var queryString = require('../utils/qs/dist');
 const _RequestParamMetadataKey = Symbol('_RequestParamMetadataKey');
 function RequestParam(cfg) {
@@ -19,6 +20,13 @@ function RequestParam(cfg) {
             parameterIndex,
         });
         Reflect.defineMetadata(_RequestParamMetadataKey, existingParameters, target, propertyKey);
+        RequestMapping_1._RequestMappingPushParams(target, {
+            name: cfg.name,
+            required: cfg.required,
+            defaultValue: cfg.defaultValue,
+            parameterIndex,
+            type: 'rp'
+        });
     };
 }
 exports.RequestParam = RequestParam;

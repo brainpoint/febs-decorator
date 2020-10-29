@@ -2,6 +2,10 @@
 
 /// <reference types="node" />
 
+import * as fetch from './fetch.d';
+import * as Rest from './rest_request.d';
+
+
 /**
  * @desc ResponseBody参数类型.
  */
@@ -15,7 +19,7 @@ export type ResponseBodyType = {
 /**
  * @desc 表明指定的类为feignClient类.
  *
- *      仅支持service返回格式为 application/json或application/x-www-form-urlencoded.
+ *      仅支持service返回格式为 application/json或application/x-www-form-urlencoded; 其他格式返回字节流
  *
  * @returns {ClassDecorator}
  */
@@ -36,7 +40,7 @@ export function FeignClient(cfg: {
  * @example
  *   import * as fetch from 'node-fetch'
  *   setFeignClientDefaultCfg({
- *      fetchObj:fetch,
+ *      fetch:fetch as any,
  *      findServiceCallback(serviceName, excludeHost):Promise<ip:string, port:number>=> {
  *        return Promise.resolve({ip, port}); 
  *      }
@@ -44,7 +48,7 @@ export function FeignClient(cfg: {
  */
 export function setFeignClientDefaultCfg(cfg: {
   /** 网络请求对象, 当在back-end使用时需设置; 可使用 node-fetch等兼容api */
-  fetchObj?: any
+  fetch?: fetch.Fetch,
   /** 最大更换实例次数; (默认3) */
   maxAutoRetriesNextServer?: number
   /** 同一实例的重试次数; (默认2) */
@@ -109,7 +113,7 @@ export function PathVariable(cfg: {
 export function RequestBody(cfg: {
   /** 是否是必须存在; */
   required?: boolean,
-  /** 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
+  /** (用于request) 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
   stringifyCallback?: (bodyData:any)=>string,
 }): ParameterDecorator;
 
@@ -120,7 +124,7 @@ export function RequestBody(cfg: {
  * @returns {MethodDecorator}
  */
 export function PostMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -128,6 +132,8 @@ export function PostMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定request或response的数据类型 */
+  dataType?: any,
 }): MethodDecorator;
 
 /**
@@ -136,7 +142,7 @@ export function PostMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function PutMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -144,6 +150,8 @@ export function PutMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定request或response的数据类型 */
+  dataType?: any,
 }): MethodDecorator;
 
 /**
@@ -152,7 +160,7 @@ export function PutMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function PatchMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -160,6 +168,8 @@ export function PatchMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定request或response的数据类型 */
+  dataType?: any,
 }): MethodDecorator;
 
 /**
@@ -168,7 +178,7 @@ export function PatchMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function GetMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -176,6 +186,8 @@ export function GetMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定request或response的数据类型 */
+  dataType?: any,
 }): MethodDecorator;
 
 /**
@@ -184,7 +196,7 @@ export function GetMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function DeleteMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
   headers?: { [key: string]: string },
@@ -192,6 +204,8 @@ export function DeleteMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
+  /** 指定request或response的数据类型 */
+  dataType?: any,
 }): MethodDecorator;
 
 /**
@@ -200,7 +214,7 @@ export function DeleteMapping(cfg: {
  * @returns {MethodDecorator}
  */
 export function RequestMapping(cfg: {
-  /** 指定请求的路径; 不可指定多个路径 */
+  /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 默认为 GET */
   method?: RequestMethod,
@@ -210,6 +224,8 @@ export function RequestMapping(cfg: {
   timeout?: number,
   mode?: string | 'no-cors' | 'cors' | 'same-origin',
   credentials?: 'include' | null,
+  /** 指定request或response的数据类型 */
+  dataType?: any,
 }): MethodDecorator;
 
 /**
@@ -248,12 +264,52 @@ export function RequestParam(cfg: {
   defaultValue?: any,
 }): ParameterDecorator;
 
+/**
+ * @desc RestObject参数类型.
+ */
+export type RestObjectType = {
+  /** request对象 */
+  request: fetch.Request;
+  /** response对象 */
+  response: fetch.Response;
+  /** 已经从response对象中读取的消息 */
+  responseMsg: any;
+  /** 处理过程中发生的错误 */
+  error: Error
+};
 
 /**
- * @desc 用于映射请求中的响应body. 并对返回数据类型做限制.
- * @param type 可以传递响应对象的类型.
+ * @desc 用于映射请求中的Rest对象, 可以对Request,Response等内容做特殊处理.
  * 
  * @returns {ParameterDecorator}
  */
-export function ResponseBody(target: Object, propertyKey: string | symbol, parameterIndex: number): void;
-export function ResponseBody(type?: any): ParameterDecorator;
+export function RestObject(target: Object, propertyKey: string | symbol, parameterIndex: number): void;
+export function RestObject(): ParameterDecorator;
+
+/**
+ * @desc 表明指定的类为RestController类.
+ *
+ * @returns {ClassDecorator}
+ */
+export function RestController(cfg?: {
+  /** 定义RestController类中请求的统一前缀 */
+  path?: string
+}): ClassDecorator;
+
+/**
+ * @desc: 设置默认的配置. 可用于全局response消息的处理等.
+ */
+export function setRestControllerDefaultCfg(cfg: {
+  /** 处理controller处理方法返回的对象returnMessage, 并返回需要response到请求端的内容 */
+  filterMessageCallback?: (returnMessage: any) => any,
+}): void;
+
+/**
+* @desc 处理请求; 
+* @description 在web框架收到http请求时, 调用此接口后将会触发指定的RestController进行处理. 当匹配到一个处理后即中断后续匹配.
+* @return 返回值表明是否匹配到适当的router.
+*/
+export function CallRestControllerRoute(
+  request: Rest.RestRequest,
+  response: Rest.RestResponse,
+): Promise<boolean>;

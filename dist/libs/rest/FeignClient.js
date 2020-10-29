@@ -23,8 +23,8 @@ function setFeignClientDefaultCfg(cfg) {
         global[DefaultFeignClientCfg] = c;
     }
     c = c || {};
-    if (cfg.hasOwnProperty('fetchObj')) {
-        c.fetchObj = cfg.fetchObj;
+    if (cfg.hasOwnProperty('fetch')) {
+        c.fetch = cfg.fetch;
     }
     if (cfg.hasOwnProperty('maxAutoRetriesNextServer')) {
         c.maxAutoRetriesNextServer = cfg.maxAutoRetriesNextServer;
@@ -43,7 +43,7 @@ exports.setFeignClientDefaultCfg = setFeignClientDefaultCfg;
 function getFeignClientDefaultCfg() {
     let cfg = global[DefaultFeignClientCfg];
     cfg = cfg || {};
-    cfg.fetchObj = cfg.fetchObj || febs.net.fetch;
+    cfg.fetch = cfg.fetch || febs.net.fetch;
     cfg.maxAutoRetriesNextServer = cfg.maxAutoRetriesNextServer || 3;
     cfg.maxAutoRetries = cfg.maxAutoRetries || 2;
     return cfg;
@@ -62,7 +62,7 @@ function FeignClient(cfg) {
     };
 }
 exports.FeignClient = FeignClient;
-function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
+function _FeignClientDo(target, requestMapping, restObject, dataType, args, fallback) {
     return __awaiter(this, void 0, void 0, function* () {
         if (requestMapping.path.length > 1) {
             throw new febs.exception("@RequestMapping in FeignClient class, 'path' must container only one url", febs.exception.ERROR, __filename, __line, __column);
@@ -80,9 +80,19 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
             throw new febs.exception(`feignClient 'findServiceCallback' must not be null`, febs.exception.ERROR, __filename, __line, __column);
         }
         let excludeHost = null;
+        let request;
+        let response;
+        let responseMsg;
+        let lastError;
         for (let i = 0; i < feignClientCfg.maxAutoRetriesNextServer; i++) {
-            let host = yield feignClientCfg.findServiceCallback(meta.name, excludeHost);
-            if (!host) {
+            let host;
+            try {
+                host = yield feignClientCfg.findServiceCallback(meta.name, excludeHost);
+                if (!host) {
+                    continue;
+                }
+            }
+            catch (e) {
                 continue;
             }
             excludeHost = `${host.ip}:${host.port}`;
@@ -99,33 +109,42 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
                 else
                     uri = 'http://' + uri;
             }
+            request = {
+                method: requestMapping.method.toString(),
+                mode: requestMapping.mode,
+                headers: requestMapping.headers,
+                timeout: requestMapping.timeout,
+                credentials: requestMapping.credentials,
+                body: requestMapping.body,
+                url: uri,
+            };
             for (let j = 0; j < feignClientCfg.maxAutoRetries; j++) {
                 let r;
                 try {
-                    let ret = yield feignClientCfg.fetchObj(uri, {
-                        method: requestMapping.method.toString(),
-                        mode: requestMapping.mode,
-                        headers: requestMapping.headers,
-                        timeout: requestMapping.timeout,
-                        credentials: requestMapping.credentials,
-                        body: requestMapping.body,
-                    });
-                    let contentType = ret.headers.get('content-type');
-                    if (contentType) {
-                        if (Array.isArray(contentType)) {
-                            contentType = contentType[0];
-                        }
-                        contentType = contentType.toLowerCase();
-                        if (contentType.indexOf('application/json') >= 0) {
-                            r = yield ret.json();
-                        }
-                        else {
-                            let txt = yield ret.text();
-                            r = qs.parse(txt);
-                        }
+                    response = null;
+                    responseMsg = null;
+                    lastError = null;
+                    let ret = yield feignClientCfg.fetch(uri, request);
+                    response = ret;
+                    let contentType = ret.headers.get('content-type') || null;
+                    if (Array.isArray(contentType)) {
+                        contentType = contentType[0];
                     }
+                    contentType = contentType ? contentType.toLowerCase() : contentType;
+                    if (febs.string.isEmpty(contentType) || contentType.indexOf('application/x-www-form-urlencoded') >= 0) {
+                        let txt = yield ret.text();
+                        r = qs.parse(txt);
+                    }
+                    else if (contentType.indexOf('application/json') >= 0) {
+                        r = yield ret.json();
+                    }
+                    else {
+                        r = yield ret.blob();
+                    }
+                    responseMsg = r;
                 }
                 catch (e) {
+                    lastError = e;
                     console.error(e);
                     continue;
                 }
@@ -133,7 +152,7 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
                     if (!r) {
                         return r;
                     }
-                    else if (!responseBody || !responseBody.type) {
+                    else if (!dataType) {
                         if (feignClientCfg.filterMessageCallback) {
                             let rr = {};
                             feignClientCfg.filterMessageCallback(r, rr);
@@ -144,7 +163,7 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
                         }
                     }
                     else {
-                        let o = new responseBody.type();
+                        let o = new dataType();
                         if (feignClientCfg.filterMessageCallback) {
                             feignClientCfg.filterMessageCallback(r, o);
                             return o;
@@ -159,15 +178,31 @@ function _FeignClientDo(target, requestMapping, responseBody, args, fallback) {
                     }
                 }
                 catch (e) {
-                    if (responseBody) {
-                        if (args.length <= responseBody.parameterIndex) {
+                    if (restObject) {
+                        if (args.length <= restObject.parameterIndex) {
                             args.length = args.length + 1;
                         }
-                        args[responseBody.parameterIndex] = { sourceMessage: r, error: e };
+                        args[restObject.parameterIndex] = {
+                            request,
+                            response,
+                            responseMsg: responseMsg,
+                            error: e,
+                        };
                     }
                     return yield fallback();
                 }
             }
+        }
+        if (restObject) {
+            if (args.length <= restObject.parameterIndex) {
+                args.length = args.length + 1;
+            }
+            args[restObject.parameterIndex] = {
+                request,
+                response,
+                responseMsg: responseMsg,
+                error: lastError,
+            };
         }
         return yield fallback();
     });
