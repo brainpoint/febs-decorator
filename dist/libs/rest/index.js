@@ -15,7 +15,6 @@ Object.defineProperty(exports, "PutMapping", { enumerable: true, get: function (
 Object.defineProperty(exports, "PatchMapping", { enumerable: true, get: function () { return RequestMapping_1.PatchMapping; } });
 Object.defineProperty(exports, "RequestMapping", { enumerable: true, get: function () { return RequestMapping_1.RequestMapping; } });
 Object.defineProperty(exports, "RequestMethod", { enumerable: true, get: function () { return RequestMapping_1.RequestMethod; } });
-Object.defineProperty(exports, "setRequestMappingDefaultCfg", { enumerable: true, get: function () { return RequestMapping_1.setRequestMappingDefaultCfg; } });
 var RequestParam_1 = require("./RequestParam");
 Object.defineProperty(exports, "RequestParam", { enumerable: true, get: function () { return RequestParam_1.RequestParam; } });
 var RestObject_1 = require("./RestObject");

@@ -1,6 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports._RequestMappingPushParams = exports._GetRequestMappingParams = exports.RequestMapping = exports.DeleteMapping = exports.GetMapping = exports.PatchMapping = exports.PutMapping = exports.PostMapping = exports.RequestMethod = exports.setRequestMappingDefaultCfg = void 0;
+exports._RequestMappingPushParams = exports._GetRequestMappingParams = exports.RequestMapping = exports.DeleteMapping = exports.GetMapping = exports.PatchMapping = exports.PutMapping = exports.PostMapping = exports.RequestMethod = void 0;
 require("reflect-metadata");
 const febs = require("febs-browser");
 const PathVariable_1 = require("./PathVariable");
@@ -9,21 +9,8 @@ const RequestBody_1 = require("./RequestBody");
 const RequestParam_1 = require("./RequestParam");
 const RestObject_1 = require("./RestObject");
 const RestController_1 = require("./RestController");
+const FeignClient_2 = require("./FeignClient");
 const _RequestMappingParamsMetadataKey = Symbol('_RequestMappingParamsMetadataKey');
-const DefaultRequestCfg = Symbol('DefaultRequestCfg');
-function setRequestMappingDefaultCfg(cfg) {
-    global[DefaultRequestCfg] = {
-        mode: cfg.mode,
-        headers: cfg.headers,
-        timeout: cfg.timeout,
-        credentials: cfg.credentials,
-    };
-}
-exports.setRequestMappingDefaultCfg = setRequestMappingDefaultCfg;
-function getRequestMappingDefaultCfg() {
-    let cfg = global[DefaultRequestCfg];
-    return cfg || {};
-}
 var RequestMethod;
 (function (RequestMethod) {
     RequestMethod["GET"] = "GET";
@@ -70,17 +57,30 @@ function RequestMapping(cfg) {
         RestController_1._RestControllerPushRouter(target, target.constructor, {
             path: cfg.path,
             functionPropertyKey: propertyKey,
-            params: _GetRequestMappingParams(target)
+            params: _GetRequestMappingParams(target),
+            method: cfg.method,
         });
         let method = descriptor.value;
         descriptor.value = function () {
             let isRestControllerClass = !!Reflect.hasOwnMetadata(RestController_1._RestControllerMetadataKey, target.constructor);
             if (isRestControllerClass) {
                 let cfgp = arguments[0];
-                if (RestController_1._RestControllerDo(target, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars)) {
-                    return method.apply(this, arguments);
+                let matchInfo = arguments[1];
+                if (RestController_1._RestControllerDo(target, matchInfo, cfg.headers, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars)) {
+                    try {
+                        return method.apply(this, arguments);
+                    }
+                    catch (e) {
+                        if (matchInfo) {
+                            matchInfo.responseError = e;
+                        }
+                        return;
+                    }
                 }
                 else {
+                    if (matchInfo) {
+                        matchInfo.match = false;
+                    }
                     return;
                 }
             }
@@ -89,7 +89,7 @@ function RequestMapping(cfg) {
                 return;
             }
             let urlPaths = setPathVariables(cpath, pathVariables);
-            let requestDefaultCfg = getRequestMappingDefaultCfg();
+            let requestDefaultCfg = FeignClient_2.getFeignClientDefaultCfg();
             let requestMappingParam = {
                 path: urlPaths,
                 method: cfg.method,

@@ -9,20 +9,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports._FeignClientDo = exports.FeignClient = exports.setFeignClientDefaultCfg = exports._FeignClientMetadataKey = void 0;
+exports._FeignClientDo = exports.FeignClient = exports.getFeignClientDefaultCfg = exports.setFeignClientDefaultCfg = exports._FeignClientMetadataKey = void 0;
 require("reflect-metadata");
 const path = require("path");
 const febs = require("febs-browser");
+const logger_1 = require("../logger");
 var qs = require('../utils/qs/dist');
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg');
 exports._FeignClientMetadataKey = Symbol('_FeignClientMetadataKey');
 function setFeignClientDefaultCfg(cfg) {
+    if (cfg.hasOwnProperty('logLevel')) {
+        logger_1.setFeignLoggerLevel(cfg.logLevel);
+    }
     let c = global[DefaultFeignClientCfg];
     if (!c) {
         c = {};
         global[DefaultFeignClientCfg] = c;
     }
-    c = c || {};
     if (cfg.hasOwnProperty('fetch')) {
         c.fetch = cfg.fetch;
     }
@@ -38,6 +41,18 @@ function setFeignClientDefaultCfg(cfg) {
     if (cfg.hasOwnProperty('filterMessageCallback')) {
         c.filterMessageCallback = cfg.filterMessageCallback;
     }
+    if (cfg.hasOwnProperty('mode')) {
+        c.mode = cfg.mode;
+    }
+    if (cfg.hasOwnProperty('headers')) {
+        c.headers = febs.utils.mergeMap(cfg.headers);
+    }
+    if (cfg.hasOwnProperty('timeout')) {
+        c.timeout = cfg.timeout;
+    }
+    if (cfg.hasOwnProperty('credentials')) {
+        c.credentials = cfg.credentials;
+    }
 }
 exports.setFeignClientDefaultCfg = setFeignClientDefaultCfg;
 function getFeignClientDefaultCfg() {
@@ -46,8 +61,10 @@ function getFeignClientDefaultCfg() {
     cfg.fetch = cfg.fetch || febs.net.fetch;
     cfg.maxAutoRetriesNextServer = cfg.maxAutoRetriesNextServer || 3;
     cfg.maxAutoRetries = cfg.maxAutoRetries || 2;
+    cfg.timeout = cfg.timeout || 20000;
     return cfg;
 }
+exports.getFeignClientDefaultCfg = getFeignClientDefaultCfg;
 function FeignClient(cfg) {
     if (febs.string.isEmpty(cfg.name)) {
         throw new febs.exception("@FeignClient need 'name' parameter", febs.exception.ERROR, __filename, __line, __column);
@@ -96,7 +113,8 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
                 continue;
             }
             excludeHost = `${host.ip}:${host.port}`;
-            let uri = febs.string.isEmpty(meta.url) ? path.join(excludeHost, meta.path, url) : meta.url;
+            let uriPathname = febs.string.isEmpty(meta.url) ? path.join(meta.path, url) : meta.url;
+            let uri = febs.string.isEmpty(meta.url) ? path.join(excludeHost, uriPathname) : uriPathname;
             if (host.port == 443) {
                 if (uri[0] == '/')
                     uri = 'https:/' + uri;
@@ -112,7 +130,7 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
             request = {
                 method: requestMapping.method.toString(),
                 mode: requestMapping.mode,
-                headers: requestMapping.headers,
+                headers: febs.utils.mergeMap(feignClientCfg.headers, requestMapping.headers),
                 timeout: requestMapping.timeout,
                 credentials: requestMapping.credentials,
                 body: requestMapping.body,
@@ -120,12 +138,14 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
             };
             for (let j = 0; j < feignClientCfg.maxAutoRetries; j++) {
                 let r;
+                let interval = Date.now();
                 try {
                     response = null;
                     responseMsg = null;
                     lastError = null;
                     let ret = yield feignClientCfg.fetch(uri, request);
                     response = ret;
+                    interval = Date.now() - interval;
                     let contentType = ret.headers.get('content-type') || null;
                     if (Array.isArray(contentType)) {
                         contentType = contentType[0];
@@ -133,17 +153,21 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
                     contentType = contentType ? contentType.toLowerCase() : contentType;
                     if (febs.string.isEmpty(contentType) || contentType.indexOf('application/x-www-form-urlencoded') >= 0) {
                         let txt = yield ret.text();
+                        logger_1.logFeignClient(request, febs.utils.mergeMap(response, { body: txt }), interval);
                         r = qs.parse(txt);
                     }
                     else if (contentType.indexOf('application/json') >= 0) {
                         r = yield ret.json();
+                        logger_1.logFeignClient(request, febs.utils.mergeMap(response, { body: r }), interval);
                     }
                     else {
                         r = yield ret.blob();
+                        logger_1.logFeignClient(request, febs.utils.mergeMap(response, { body: r }), interval);
                     }
                     responseMsg = r;
                 }
                 catch (e) {
+                    logger_1.logFeignClient(request, { err: e }, 0);
                     lastError = e;
                     console.error(e);
                     continue;
@@ -155,7 +179,7 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
                     else if (!dataType) {
                         if (feignClientCfg.filterMessageCallback) {
                             let rr = {};
-                            feignClientCfg.filterMessageCallback(r, rr);
+                            feignClientCfg.filterMessageCallback(r, rr, meta.name, uriPathname);
                             return rr;
                         }
                         else {
@@ -165,13 +189,24 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
                     else {
                         let o = new dataType();
                         if (feignClientCfg.filterMessageCallback) {
-                            feignClientCfg.filterMessageCallback(r, o);
+                            feignClientCfg.filterMessageCallback(r, o, meta.name, uriPathname);
                             return o;
                         }
                         else {
-                            for (const key in r) {
-                                const element = r[key];
-                                o[key] = element;
+                            if (o instanceof String) {
+                                o = r;
+                            }
+                            else if (o instanceof Number) {
+                                o = new Number(r).valueOf();
+                            }
+                            else if (o instanceof Boolean) {
+                                o = (r === 'true' || r === '1' || r === true || r === 1);
+                            }
+                            else {
+                                for (const key in r) {
+                                    const element = r[key];
+                                    o[key] = element;
+                                }
                             }
                         }
                         return o;

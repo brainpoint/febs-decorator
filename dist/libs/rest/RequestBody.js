@@ -6,23 +6,44 @@ const febs = require("febs-browser");
 const RequestMapping_1 = require("./RequestMapping");
 var qs = require('../utils/qs/dist');
 const _RequestBodyMetadataKey = Symbol('_RequestBodyMetadataKey');
-function RequestBody(cfg) {
-    cfg.required = febs.utils.isNull(cfg.required) ? true : cfg.required;
-    return (target, propertyKey, parameterIndex) => {
+function RequestBody(...args) {
+    if (args.length == 1) {
+        let cfg = args[0];
+        cfg.required = febs.utils.isNull(cfg.required) ? true : cfg.required;
+        return (target, propertyKey, parameterIndex) => {
+            if (Reflect.hasOwnMetadata(_RequestBodyMetadataKey, target, propertyKey)) {
+                throw new febs.exception('@RequestBody must only one', febs.exception.ERROR, __filename, __line, __column);
+            }
+            Reflect.defineMetadata(_RequestBodyMetadataKey, {
+                required: cfg.required,
+                stringifyCallback: cfg.stringifyCallback,
+                parameterIndex,
+            }, target, propertyKey);
+            RequestMapping_1._RequestMappingPushParams(target, {
+                required: cfg.required,
+                parameterIndex,
+                type: 'rb'
+            });
+        };
+    }
+    else {
+        let target = args[0];
+        let propertyKey = args[1];
+        let parameterIndex = args[2];
         if (Reflect.hasOwnMetadata(_RequestBodyMetadataKey, target, propertyKey)) {
             throw new febs.exception('@RequestBody must only one', febs.exception.ERROR, __filename, __line, __column);
         }
         Reflect.defineMetadata(_RequestBodyMetadataKey, {
-            required: cfg.required,
-            stringifyCallback: cfg.stringifyCallback,
+            required: false,
+            stringifyCallback: null,
             parameterIndex,
         }, target, propertyKey);
         RequestMapping_1._RequestMappingPushParams(target, {
-            required: cfg.required,
+            required: false,
             parameterIndex,
             type: 'rb'
         });
-    };
+    }
 }
 exports.RequestBody = RequestBody;
 function _RequestBodyDo(target, propertyKey, args, requestMapping) {

@@ -13,6 +13,8 @@ exports._RestControllerPushRouter = exports._RestControllerDo = exports.CallRest
 require("reflect-metadata");
 const path = require("path");
 const febs = require("febs-browser");
+const Service_1 = require("../Service");
+const logger_1 = require("../logger");
 var qs = require('../utils/qs/dist');
 const DefaultRestControllerCfg = Symbol('DefaultRestControllerCfg');
 const RestControllerRouters = Symbol('RestControllerRouters');
@@ -21,20 +23,34 @@ exports._RestControllerMetadataKey = Symbol('_RestControllerMetadataKey');
 function getRestControllerRouters() {
     let routers = global[RestControllerRouters];
     if (!routers) {
-        routers = {};
+        routers = [];
         global[RestControllerRouters] = routers;
     }
     return routers;
 }
 function setRestControllerDefaultCfg(cfg) {
+    if (cfg.hasOwnProperty('logLevel')) {
+        logger_1.setRestLoggerLevel(cfg.logLevel);
+    }
     let c = global[DefaultRestControllerCfg];
     if (!c) {
         c = {};
         global[DefaultRestControllerCfg] = c;
     }
-    c = c || {};
     if (cfg.hasOwnProperty('filterMessageCallback')) {
         c.filterMessageCallback = cfg.filterMessageCallback;
+    }
+    if (cfg.hasOwnProperty('errorRequestCallback')) {
+        c.errorRequestCallback = cfg.errorRequestCallback;
+    }
+    if (cfg.hasOwnProperty('errorResponseCallback')) {
+        c.errorResponseCallback = cfg.errorResponseCallback;
+    }
+    if (cfg.hasOwnProperty('notFoundCallback')) {
+        c.notFoundCallback = cfg.notFoundCallback;
+    }
+    if (cfg.hasOwnProperty('headers')) {
+        c.headers = febs.utils.mergeMap(cfg.headers);
     }
 }
 exports.setRestControllerDefaultCfg = setRestControllerDefaultCfg;
@@ -47,15 +63,19 @@ function RestController(cfg) {
     cfg = cfg || {};
     cfg.path = cfg.path || '';
     return (target) => {
+        Service_1.Service(target, 'RestController');
+        let instance = Service_1.getServiceInstances('RestController');
+        instance = instance[instance.length - 1];
         let routers = Reflect.getOwnMetadata(_RestControllerRouterMetadataKey, target);
         if (routers) {
             let globalRouters = getRestControllerRouters();
             for (let p in routers) {
                 let val = routers[p];
-                let pp = path.join(cfg.path, p);
-                let reg = getPathReg(pp);
+                let pp = path.join(cfg.path, val.path);
+                let reg = getPathReg(pp, val.params);
                 val.reg = reg.reg;
                 val.pathVars = reg.pathVars;
+                val.target = instance;
                 globalRouters.push(val);
             }
         }
@@ -63,11 +83,12 @@ function RestController(cfg) {
     };
 }
 exports.RestController = RestController;
-function CallRestControllerRoute(request, response) {
+function CallRestControllerRoute(request) {
     return __awaiter(this, void 0, void 0, function* () {
+        let interval = Date.now();
         let rotuers = getRestControllerRouters();
         if (!rotuers) {
-            return Promise.resolve(false);
+            return Promise.resolve(null);
         }
         let pathname = request.url;
         let querystring = null;
@@ -79,30 +100,85 @@ function CallRestControllerRoute(request, response) {
             }
             pathname = pathname.substr(0, qsPos);
         }
+        let cfg = getRestControllerDefaultCfg();
         for (let i = 0; i < rotuers.length; i++) {
             let router = rotuers[i];
-            if (router.reg.test(pathname)) {
-                let ret = yield router.target[router.functionPropertyKey]({
+            if (router.method == request.method.toLowerCase() && router.reg.test(pathname)) {
+                let response = {
+                    headers: {},
+                    status: 200,
+                    body: null
+                };
+                let matchInfo = { match: true, requestError: null, responseError: null };
+                let ret;
+                ret = yield router.target[router.functionPropertyKey]({
                     pathname: pathname,
                     querystring,
                     request,
                     response,
                     params: router.params,
                     pathVars: router.pathVars,
-                });
-                let cfg = getRestControllerDefaultCfg();
+                }, matchInfo);
+                if (matchInfo.requestError) {
+                    interval = Date.now() - interval;
+                    logger_1.logRest(request, { err: '[Error] request error' }, interval);
+                    if (cfg.errorRequestCallback) {
+                        cfg.errorRequestCallback(matchInfo.requestError, request, response);
+                    }
+                    return Promise.resolve(null);
+                }
+                if (matchInfo.responseError) {
+                    interval = Date.now() - interval;
+                    logger_1.logRest(request, { err: '[Error] response error' }, interval);
+                    if (cfg.errorResponseCallback) {
+                        cfg.errorResponseCallback(matchInfo.responseError, request, response);
+                    }
+                    return Promise.resolve(null);
+                }
+                if (!matchInfo.match) {
+                    interval = Date.now() - interval;
+                    logger_1.logRest(request, { err: '[404] Route matched, but condition not satisfied' }, interval);
+                    if (cfg.notFoundCallback) {
+                        cfg.notFoundCallback(request, response);
+                    }
+                    return Promise.resolve(null);
+                }
                 if (cfg.filterMessageCallback) {
-                    ret = cfg.filterMessageCallback(ret);
+                    ret = cfg.filterMessageCallback(ret, request.url);
                 }
                 response.body = ret;
-                return Promise.resolve(true);
+                interval = Date.now() - interval;
+                logger_1.logRest(request, response, interval);
+                return Promise.resolve(response);
             }
         }
-        return Promise.resolve(false);
+        interval = Date.now() - interval;
+        logger_1.logRest(request, { err: '[404] No match Router' }, interval);
+        if (cfg.notFoundCallback) {
+            let response = {
+                headers: {},
+                status: 200,
+                body: null
+            };
+            const defaultHeaders = febs.utils.mergeMap(cfg.headers);
+            if (defaultHeaders) {
+                for (const key in defaultHeaders) {
+                    response.headers[key] = defaultHeaders[key];
+                }
+            }
+            cfg.notFoundCallback(request, response);
+        }
+        return Promise.resolve(null);
     });
 }
 exports.CallRestControllerRoute = CallRestControllerRoute;
-function _RestControllerDo(target, dataType, args, pathname, querystring, request, response, params, pathVars) {
+function _RestControllerDo(target, matchInfo, headers, dataType, args, pathname, querystring, request, response, params, pathVars) {
+    const defaultHeaders = febs.utils.mergeMap(getRestControllerDefaultCfg().headers, headers);
+    if (defaultHeaders) {
+        for (const key in defaultHeaders) {
+            response.headers[key] = defaultHeaders[key];
+        }
+    }
     args.length = 0;
     if (params) {
         for (let i = 0; i < params.length; i++) {
@@ -111,7 +187,7 @@ function _RestControllerDo(target, dataType, args, pathname, querystring, reques
                 args.length = param.parameterIndex + 1;
             }
             if (param.type == 'pv') {
-                let index = pathVars[param.name];
+                let index = pathVars['{' + param.name + '}'];
                 if (!febs.utils.isNull(index)) {
                     let data = pathname.split('/')[index];
                     if (data) {
@@ -134,15 +210,31 @@ function _RestControllerDo(target, dataType, args, pathname, querystring, reques
                     args[param.parameterIndex] = request.body;
                 }
                 else {
-                    let data = new dataType();
-                    for (const key in request.body) {
-                        data[key] = request.body[key];
+                    try {
+                        let data = new dataType();
+                        if (data instanceof String) {
+                            data = request.body;
+                        }
+                        else if (data instanceof Number) {
+                            data = new Number(request.body).valueOf();
+                        }
+                        else if (data instanceof Boolean) {
+                            data = (request.body === 'true' || request.body === '1' || request.body === true || request.body === 1);
+                        }
+                        else {
+                            for (const key in request.body) {
+                                data[key] = request.body[key];
+                            }
+                        }
+                        args[param.parameterIndex] = data;
                     }
-                    args[param.parameterIndex] = data;
+                    catch (e) {
+                        matchInfo.requestError = e;
+                    }
                 }
             }
             else if (param.type == 'rp') {
-                if (!querystring || !querystring[param.name]) {
+                if (!querystring || !querystring.hasOwnProperty(param.name)) {
                     if (param.required && !param.defaultValue) {
                         return false;
                     }
@@ -165,35 +257,58 @@ function _RestControllerDo(target, dataType, args, pathname, querystring, reques
     return true;
 }
 exports._RestControllerDo = _RestControllerDo;
-function getPathReg(p) {
+function getPathReg(p, params) {
+    params = params || [];
+    if (p[0] != '/')
+        p = '/' + p;
+    if (p[p.length - 1] == '/')
+        p = p.substr(0, p.length - 1);
     p = febs.string.replace(p, '\\', '\\\\');
-    p = febs.string.replace(p, '[', '\\[');
-    p = febs.string.replace(p, ']', '\\]');
-    p = febs.string.replace(p, '(', '\\(');
-    p = febs.string.replace(p, ')', '\\)');
-    p = febs.string.replace(p, '{', '\\{');
-    p = febs.string.replace(p, '}', '\\}');
-    p = febs.string.replace(p, '|', '\\|');
-    p = febs.string.replace(p, '^', '\\^');
-    p = febs.string.replace(p, '?', '\\?');
-    p = febs.string.replace(p, '.', '\\.');
-    p = febs.string.replace(p, '+', '\\+');
-    p = febs.string.replace(p, '*', '\\*');
-    p = febs.string.replace(p, '$', '\\$');
-    p = febs.string.replace(p, ':', '\\:');
-    p = febs.string.replace(p, '-', '\\-');
+    p = febs.string.replace(p, '[', '\[');
+    p = febs.string.replace(p, ']', '\]');
+    p = febs.string.replace(p, '(', '\(');
+    p = febs.string.replace(p, ')', '\)');
+    p = febs.string.replace(p, '{', '\{');
+    p = febs.string.replace(p, '}', '\}');
+    p = febs.string.replace(p, '|', '\|');
+    p = febs.string.replace(p, '^', '\^');
+    p = febs.string.replace(p, '?', '\?');
+    p = febs.string.replace(p, '.', '\.');
+    p = febs.string.replace(p, '+', '\+');
+    p = febs.string.replace(p, '*', '\*');
+    p = febs.string.replace(p, '$', '\$');
+    p = febs.string.replace(p, ':', '\:');
+    p = febs.string.replace(p, '-', '\-');
     let pathVars = {};
     let segs = p.split('/');
-    p = '';
+    p = '^\/';
+    let pvHadRequired = true;
     for (let i = 0; i < segs.length; i++) {
-        if (/^\\\{[a-zA-Z\$_][a-zA-Z\d_]*\\\}$/.test(segs[i])) {
-            p += '\\/[^/]+';
+        if (segs[i].length == 0)
+            continue;
+        if (/^\{[a-zA-Z\$_][a-zA-Z\d_]*\}$/.test(segs[i])) {
+            p += '\/((?!.*\/).*)';
+            for (let j = 0; j < params.length; j++) {
+                if (params[j].type == 'pv' && '{' + params[j].name + '}' == segs[i]) {
+                    if (!params[j].required) {
+                        pvHadRequired = false;
+                        p = '(' + p + ')?';
+                    }
+                    else if (!pvHadRequired) {
+                        throw new Error(`@PathVariable '${params[j].name}': required cannot be 'true', pre-pathVariable required=false`);
+                    }
+                    break;
+                }
+            }
             pathVars[segs[i]] = i;
         }
         else {
-            p += '\\/' + segs[i];
+            if (p.length > 2)
+                p += '\/';
+            p += segs[i];
         }
     }
+    p += '\/?(\\?.*)?$';
     return { reg: new RegExp(p), pathVars };
 }
 function _RestControllerPushRouter(targetObject, target, cfg) {
@@ -205,6 +320,7 @@ function _RestControllerPushRouter(targetObject, target, cfg) {
                 functionPropertyKey: cfg.functionPropertyKey,
                 params: cfg.params,
                 path: cfg.path[i],
+                method: cfg.method.toLowerCase(),
             });
         }
     }
@@ -214,6 +330,7 @@ function _RestControllerPushRouter(targetObject, target, cfg) {
             functionPropertyKey: cfg.functionPropertyKey,
             params: cfg.params,
             path: cfg.path,
+            method: cfg.method.toLowerCase(),
         });
     }
     Reflect.defineMetadata(_RestControllerRouterMetadataKey, routers, target);

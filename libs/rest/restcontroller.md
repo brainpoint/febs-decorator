@@ -16,13 +16,16 @@ import {
   RequestMethod,
 } from "febs-decorator";
 
+/**
+ * RestController 继承至 Service, 会在文件被引用到时自动初始化实例; 
+ */
 @RestController()
 class BaseService {
   /**
    * 处理 /api 路由.
    */
   @RequestMapping({ path: '/api', method: RequestMethod.GET, dataType:BeanDemo })
-  async request(): Promise<BeanDemo> {
+  request(): Promise<BeanDemo> {
     return Promise.resolve(new BeanDemo());
   }
 }
@@ -40,8 +43,18 @@ import { setRestControllerDefaultCfg } from "febs-decorator";
  * @desc: 设置默认的配置. 可用于全局response消息的处理等.
  */
 setRestControllerDefaultCfg({
+  /** 日志级别. */
+  logLevel?: RestLogLevel,
+  /** 如果response对象中不存在对应的header, 则附加的header */
+  headers?: { [key: string]: string|string[] },
   /** 处理controller处理方法返回的对象returnMessage, 并返回需要response到请求端的内容 */
-  filterMessageCallback: (returnMessage: any) => any,
+  filterMessageCallback?: (returnMessage: any, requestUrl: string) => any,
+  /** 接收消息时发生数据类型等错误. */
+  errorRequestCallback?: (error:Error, request:Rest.RestRequest, response:Rest.RestResponse ) => void,
+  /** 响应消息时发生错误. */
+  errorResponseCallback?: (error:Error, request:Rest.RestRequest, response:Rest.RestResponse ) => void,
+  /** 404. */
+  notFoundCallback?: (request:Rest.RestRequest, response:Rest.RestResponse ) => void,
 });
 ```
 

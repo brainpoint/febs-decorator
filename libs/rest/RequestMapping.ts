@@ -15,49 +15,9 @@ import { _RequestBodyDo } from './RequestBody';
 import { _RequestParamDo } from './RequestParam';
 import { _RestObjectDo } from './RestObject';
 import { _RestControllerDo, _RestControllerMetadataKey, _RestControllerPushRouter } from './RestController';
+import { getFeignClientDefaultCfg } from './FeignClient';
 
 const _RequestMappingParamsMetadataKey = Symbol('_RequestMappingParamsMetadataKey')
-const DefaultRequestCfg = Symbol('DefaultRequestCfg');
-
-// export type RequestMappingMetadataType = {
-//   path: string[],
-//   method: RequestMethod,
-//   mode: string|'no-cors'|'cors'|'same-origin',
-//   headers: { [key: string]: string },
-//   timeout: number,
-//   credentials: 'include'|null|undefined,
-// };
-
-/**
-* @desc: 设置默认的请求配置. 可用于设置header等.
-*/
-export function setRequestMappingDefaultCfg(cfg: {
-  /** 每次请求需要附加的header */
-  headers?: { [key: string]: string },
-  /** 请求超时(ms) */
-  timeout?: number,
-  /** 在front-end使用时设置跨域等信息 */
-  mode?: string|'no-cors'|'cors'|'same-origin',
-  credentials?: 'include'|null,
-}) {
-  (global as any)[DefaultRequestCfg] = {
-    mode: cfg.mode,
-    headers: cfg.headers,
-    timeout: cfg.timeout,
-    credentials: cfg.credentials,
-  }
-}
-
-function getRequestMappingDefaultCfg() : {
-  mode?: string|'no-cors'|'cors'|'same-origin',
-  headers?: { [key: string]: string },
-  timeout?: number,
-  credentials?: 'include'|null,
-} {
-  let cfg = (global as any)[DefaultRequestCfg];
-  return cfg || {};
-}
-
 
 /**
  * request method.
@@ -81,7 +41,7 @@ export function PostMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string },
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -101,7 +61,7 @@ export function PutMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?的qs */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string },
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -121,7 +81,7 @@ export function PatchMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string },
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -141,7 +101,7 @@ export function GetMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string },
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -161,7 +121,7 @@ export function DeleteMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string },
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -183,7 +143,7 @@ export function RequestMapping(cfg: {
   /** 默认为 GET */
   method?: RequestMethod,
   /** 附加的header */
-  headers?: { [key: string]: string },
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -224,7 +184,8 @@ export function RequestMapping(cfg: {
     _RestControllerPushRouter(target, target.constructor, {
       path: cfg.path,
       functionPropertyKey: propertyKey,
-      params: _GetRequestMappingParams(target)
+      params: _GetRequestMappingParams(target),
+      method: cfg.method,
     });
 
     let method = descriptor.value;
@@ -247,10 +208,21 @@ export function RequestMapping(cfg: {
           }[],
           pathVars?: { [name: string]: number },
         } = arguments[0];
-        if (_RestControllerDo(target, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars)) {
-          return method.apply(this, arguments);
+        let matchInfo: { match: boolean, requestError: Error, responseError: Error } = arguments[1];
+        if (_RestControllerDo(target, matchInfo, cfg.headers, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars)) {
+          try {
+            return method.apply(this, arguments);
+          } catch (e) {
+            if (matchInfo) {
+              matchInfo.responseError = e;
+            }
+            return;
+          }
         }
         else {
+          if (matchInfo) {
+            matchInfo.match = false;
+          }
           return;
         }
       }
@@ -267,7 +239,7 @@ export function RequestMapping(cfg: {
 
       let urlPaths = setPathVariables(cpath, pathVariables);
 
-      let requestDefaultCfg = getRequestMappingDefaultCfg();
+      let requestDefaultCfg = getFeignClientDefaultCfg();
       let requestMappingParam = {
         path: urlPaths,
         method: cfg.method,

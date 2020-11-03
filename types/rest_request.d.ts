@@ -7,7 +7,7 @@ export interface RestRequest {
   /**
    * Return request header
    */
-  headers: any;
+  headers: { [field:string]:string|string[] };
   /**
    * Get/Set request URL.
    */
@@ -48,26 +48,13 @@ export interface RestRequest {
 
 export interface RestResponse {
   /**
-   * set response header
+   * response headers
    */
-  setHeader(field: string, val: string | string[]): void;
-  /**
-   * remove response header
-   */
-  removeHeader(field: string): void;
-  /**
-   * append response header
-   */
-  appendHeader(field: string, val: string | string[]): void;
+  headers: { [field:string]:string|string[] };
   /**
    * Get/Set response status code.
    */
   status: number;
-
-  /**
-   * Get response status message
-   */
-  message: string;
   /**
    * Request body.
    */

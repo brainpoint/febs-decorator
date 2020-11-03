@@ -15,7 +15,7 @@
     "url": "git+ssh://git@github.com/brainpoint/febs-decorator.git"
   },
   "scripts": {
-    "test": "tsc --build tsconfig.json && cp -rf libs/utils/qs dist/libs/utils && tap dist/test/type.js",
+    "test": "tsc --build tsconfig.json && cp -rf libs/utils/qs dist/libs/utils && tap dist/test/*.js",
     "prepublishOnly": "tsc --build tsconfig.json && cp -rf libs/utils/qs dist/libs/utils"
   },
   "keywords": [

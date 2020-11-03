@@ -3,7 +3,6 @@
 - [配置及初始化.](#配置及初始化)
   - [RestController](#restcontroller)
   - [FeignClient](#feignclient)
-  - [RequestMapping配置](#requestmapping配置)
 - [@RequestMapping](#requestmapping)
 - [@PathVariable](#pathvariable)
 - [@RequestParam](#requestparam)
@@ -48,27 +47,6 @@ RestController相关装饰器, 查看 [RestController](./restcontroller.md)
 ### FeignClient
 
 微服务FeignClient相关装饰器, 查看 [FeignClient](./feignclient.md)
-
-### RequestMapping配置
-
-每次使用@RequestMapping装饰器时, 可以单独设置timeout等参数, 也可以设置RequestMapping默认的`timeout`, `headers`等参数.
-
-<summary>设置默认值</summary>
-
-```js
-/**
-* 设置默认的请求配置. 可用于设置header等.
-*/
-setRequestMappingDefaultCfg(cfg: {
-  /** 每次请求需要附加的header */
-  headers?: { [key: string]: string },
-  /** 请求超时(ms) */
-  timeout?: number,
-  /** 在front-end使用时设置跨域等信息 */
-  mode?: string|'no-cors'|'cors'|'same-origin',
-  credentials?: 'include'|null,
-})
-```
 
 ## @RequestMapping
 
@@ -176,10 +154,7 @@ import { FeignClient, RequestMapping, RequestBody } from "febs-decorator";
 class DemoService {
   @GetMapping({path: '/api'})
   async request( 
-    @RequestBody({
-      /** 是否是必须存在 */
-      required: true,
-    }) body: any
+    @RequestBody body: any
   ) : Promise<any> {
     throw new Error('fallback deal');
   }
@@ -198,7 +173,7 @@ await obj.request('hello');
   /** 是否是必须存在 */
   required: true,
   /** 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
-  stringifyCallback: (bodyData:any):string=>JSON.stringify(bodyData)
+  stringifyCallback?: (bodyData:any):string=>JSON.stringify(bodyData)
 }) body: any
 ```
 
@@ -221,7 +196,7 @@ class DemoBean {
 /** 定义feignClient */
 @FeignClient({name: 'serviceName'})
 class DemoService {
-  @RequestMapping({path: '/api', dataType: DemoBean}) // 如果无法转换为DemoBean, 将进入fallback处理.
+  @RequestMapping({path: '/api', dataType: DemoBean}) // 如果无法转换远程发送来的数据为DemoBean, 将进入fallback处理.
   async request() : Promise<DemoBean> {
     // fallback
     throw new Error('fallback deal');
@@ -229,6 +204,18 @@ class DemoService {
 }
 
 let bean:DemoBean = await new DemoService().request();
+```
+
+如果使用RestController, 则`dataType`将表示`RequestBody`的类型
+
+```js
+@RestController()
+class DemoService {
+  @RequestMapping({path: '/api', dataType: DemoBean}) // 如果无法转换远程发送来的数据为DemoBean, 将进入errorRequestCallback.
+  async request( @RequestBody data:DemoBean ) : Promise<any> {
+
+  }
+}
 ```
 
 ## @RestObject 获取Rest对象的详细信息

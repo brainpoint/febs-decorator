@@ -19,6 +19,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const __1 = require("..");
+const __2 = require("..");
+let TestService = class TestService {
+    test() { }
+};
+TestService = __decorate([
+    __1.Service
+], TestService);
+console.log(typeof __1.getServiceInstances("")[0].test === 'function');
 let TestController = class TestController {
     test() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -27,17 +35,17 @@ let TestController = class TestController {
     }
 };
 __decorate([
-    __1.RequestMapping({ path: '/api/xxx', method: __1.RequestMethod.GET }),
+    __2.RequestMapping({ path: '/api/xxx', method: __2.RequestMethod.GET }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], TestController.prototype, "test", null);
 TestController = __decorate([
-    __1.FeignClient({ name: 'base' })
+    __2.FeignClient({ name: 'base' })
 ], TestController);
 function test() {
     return __awaiter(this, void 0, void 0, function* () {
-        __1.setFeignClientDefaultCfg({
+        __2.setFeignClientDefaultCfg({
             findServiceCallback,
         });
         let bean = new TestController();
@@ -48,7 +56,8 @@ test().then(() => { });
 function findServiceCallback(serviceName, excludeHost) {
     return Promise.resolve({
         ip: '127.0.0.1',
-        port: 8080
+        port: 8080,
+        serviceName
     });
 }
 //# sourceMappingURL=rest.js.map

@@ -3,6 +3,7 @@
 /// <reference types="node" />
 
 import * as fetch from './fetch.d';
+import { RestLogLevel } from './logger';
 import * as Rest from './rest_request.d';
 
 
@@ -33,6 +34,17 @@ export function FeignClient(cfg: {
 }): ClassDecorator;
 
 /**
+ * Micro-service cell information.
+ */
+export type MicroserviceInfo = {
+  serviceName: string,
+  ip: string,
+  port: number,
+  weight?: number,
+  metadata?: any
+};
+
+/**
  * @desc: 设置默认的请求配置. 可用于设置fetch对象, 重试信息等.
  *
  *     负载均衡策略由 findServiceCallback 提供.
@@ -48,21 +60,30 @@ export function FeignClient(cfg: {
  */
 export function setFeignClientDefaultCfg(cfg: {
   /** 网络请求对象, 当在back-end使用时需设置; 可使用 node-fetch等兼容api */
-  fetch?: fetch.Fetch,
+  fetch?: fetch.Fetch
   /** 最大更换实例次数; (默认3) */
   maxAutoRetriesNextServer?: number
   /** 同一实例的重试次数; (默认2) */
   maxAutoRetries?: number
+  /** 每次请求需要附加的header */
+  headers?: { [key: string]: string|string[] },
+  /** 请求超时, 默认20000ms */
+  timeout?: number,
+  /** 日志级别. */
+  logLevel?: RestLogLevel,
   /** 获取指定service的回调. */
   findServiceCallback: (
     serviceName: string,
     excludeHost: string
-  ) => Promise<{
-    ip: string
-    port: number
-  }>,
-  /** 处理收到的对象receiveMessage, 将正确的结果存储至retureMessage中 */
-  filterMessageCallback?: (receiveMessage: any, retureMessage: any) => void,
+  ) => Promise<MicroserviceInfo>,
+  /** 
+   * 处理收到的对象receiveMessage, 将正确的结果存储至retureMessage中. 
+   * 若抛出异常则表明消息错误, 将会由RestObject传递给controller.
+   */
+  filterMessageCallback?: (receiveMessage: any, returnMessage: any, requestService: string, requestUrl: string) => void,
+  /** 在front-end使用时设置跨域等信息 */
+  mode?: string|'no-cors'|'cors'|'same-origin',
+  credentials?: 'include'|null,
 }): void;
 
 /**
@@ -110,6 +131,7 @@ export function PathVariable(cfg: {
  * 
  * @returns {ParameterDecorator}
  */
+export function RequestBody(target: Object, propertyKey: string | symbol, parameterIndex: number): void;
 export function RequestBody(cfg: {
   /** 是否是必须存在; */
   required?: boolean,
@@ -126,8 +148,8 @@ export function RequestBody(cfg: {
 export function PostMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
-  /** 附加的header */
-  headers?: { [key: string]: string },
+  /** 附加的header; (请求或响应的header) */
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -144,8 +166,8 @@ export function PostMapping(cfg: {
 export function PutMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
-  /** 附加的header */
-  headers?: { [key: string]: string },
+  /** 附加的header; (请求或响应的header) */
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -162,8 +184,8 @@ export function PutMapping(cfg: {
 export function PatchMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
-  /** 附加的header */
-  headers?: { [key: string]: string },
+  /** 附加的header; (请求或响应的header) */
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -180,8 +202,8 @@ export function PatchMapping(cfg: {
 export function GetMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
-  /** 附加的header */
-  headers?: { [key: string]: string },
+  /** 附加的header; (请求或响应的header) */
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -198,8 +220,8 @@ export function GetMapping(cfg: {
 export function DeleteMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
-  /** 附加的header */
-  headers?: { [key: string]: string },
+  /** 附加的header; (请求或响应的header) */
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -218,8 +240,8 @@ export function RequestMapping(cfg: {
   path: string | string[],
   /** 默认为 GET */
   method?: RequestMethod,
-  /** 附加的header */
-  headers?: { [key: string]: string },
+  /** 附加的header; (请求或响应的header) */
+  headers?: { [key: string]: string|string[] },
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string | 'no-cors' | 'cors' | 'same-origin',
@@ -227,19 +249,6 @@ export function RequestMapping(cfg: {
   /** 指定request或response的数据类型 */
   dataType?: any,
 }): MethodDecorator;
-
-/**
-* @desc: 设置默认的请求配置. 可用于设置header等.
-*/
-export function setRequestMappingDefaultCfg(cfg: {
-  /** 每次请求需要附加的header */
-  headers?: { [key: string]: string },
-  /** 请求超时(ms) */
-  timeout?: number,
-  /** 在front-end使用时设置跨域等信息 */
-  mode?: string | 'no-cors' | 'cors' | 'same-origin',
-  credentials?: 'include' | null,
-}): void;
 
 /**
  * @desc 用于映射请求中的查询参数.
@@ -300,16 +309,25 @@ export function RestController(cfg?: {
  * @desc: 设置默认的配置. 可用于全局response消息的处理等.
  */
 export function setRestControllerDefaultCfg(cfg: {
+  /** 日志级别. */
+  logLevel?: RestLogLevel,
+  /** 如果response对象中不存在对应的header, 则附加的header */
+  headers?: { [key: string]: string|string[] },
   /** 处理controller处理方法返回的对象returnMessage, 并返回需要response到请求端的内容 */
-  filterMessageCallback?: (returnMessage: any) => any,
+  filterMessageCallback?: (returnMessage: any, requestUrl: string) => any,
+  /** 接收消息时发生数据类型等错误. */
+  errorRequestCallback?: (error:Error, request:Rest.RestRequest, response:Rest.RestResponse ) => void,
+  /** 响应消息时发生错误. */
+  errorResponseCallback?: (error:Error, request:Rest.RestRequest, response:Rest.RestResponse ) => void,
+  /** 404. */
+  notFoundCallback?: (request:Rest.RestRequest, response:Rest.RestResponse ) => void,
 }): void;
 
 /**
 * @desc 处理请求; 
 * @description 在web框架收到http请求时, 调用此接口后将会触发指定的RestController进行处理. 当匹配到一个处理后即中断后续匹配.
-* @return 返回值表明是否匹配到适当的router.
+* @return 返回null表明未匹配到适当的router.
 */
 export function CallRestControllerRoute(
   request: Rest.RestRequest,
-  response: Rest.RestResponse,
-): Promise<boolean>;
+): Promise<Rest.RestResponse>;

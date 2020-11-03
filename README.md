@@ -31,12 +31,25 @@ class BeanDemo {
 let obj = new BeanA();  // will throw a exception.
 ```
 
-Rest Example:
+Service Example:
+
+```js
+import {Service, getServiceInstances} from 'febs-decorator';
+
+@Service
+class BeanDemo {
+}
+
+// get service instances.
+let objArray:any[] = getServiceInstances();
+```
+
+FeignClient Example:
 
 ```js
 import { RestController, RequestMapping, RequestMethod } from "febs-decorator";
 
-@RestController()
+@FeignClient({name:'serviceName'})
 export class BaseService {
   @RequestMapping({ path: '/api', method: RequestMethod.GET, dataType: BeanDemo })
   async request(): Promise<BeanDemo> {
@@ -46,7 +59,7 @@ export class BaseService {
 }
 
 // request
-let result:BeanDemo = new BaseService().request(); 
+let result:BeanDemo = new BaseService().request();
 ```
 
 ## Reference
@@ -57,5 +70,5 @@ A set of validator decorators, e.g. `@NotNull`, `@Max`, `@Min`, `@Range` ..
 
 ### [Rest Decorator](./libs/rest/readme.md)
 
-A set of restful api decorators, e.g. `@FeignClient`, `@RequestMapping`, `@RequestBody`, `@PathVariable` ..
+A set of restful api decorators, e.g. `@RestController`, `@FeignClient`, `@RequestMapping`, `@RequestBody`, `@PathVariable` ..
 

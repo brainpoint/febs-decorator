@@ -7,5 +7,6 @@
 * Desc: 
 */
 
+export * from './libs/Service';
 export * from './libs/validator';
 export * from './libs/rest';

@@ -1,5 +1,4 @@
 'use strict'
-import { basename } from 'path';
 /**
  * Copyright (c) 2020 Copyright bp All Rights Reserved.
  * Author: brian.li
@@ -8,9 +7,16 @@ import { basename } from 'path';
  */
 import tap from 'tap'
 // import * as febs from 'febs';
-import { FeignClient, RequestMapping, RequestMethod, setFeignClientDefaultCfg } from '..'
+import { getServiceInstances, Service } from '..'
+import { FeignClient, RequestMapping, RequestMethod, setFeignClientDefaultCfg, MicroserviceInfo } from '..'
 import { except_fail, except_success } from './lib'
 
+@Service
+class TestService {
+  test() {}
+}
+
+console.log(typeof getServiceInstances("")[0].test === 'function');
 
 /**
  * 定义feignClient对象.
@@ -43,13 +49,11 @@ test().then(() => { });
 function findServiceCallback(
   serviceName: string,
   excludeHost: string
-): Promise<{
-  ip: string
-  port: number
-}> {
+): Promise<MicroserviceInfo> {
   // use nacos or eureka api to get a host.
   return Promise.resolve({
     ip: '127.0.0.1',
-    port: 8080
+    port: 8080,
+    serviceName
   });
 }

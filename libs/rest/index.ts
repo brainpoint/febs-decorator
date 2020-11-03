@@ -7,7 +7,7 @@
  * Desc:
  */
 
-export { FeignClient, setFeignClientDefaultCfg } from './FeignClient'
+export { FeignClient, setFeignClientDefaultCfg, MicroserviceInfo } from './FeignClient'
 export { PathVariable } from './PathVariable'
 export { RequestBody } from './RequestBody'
 export {
@@ -18,7 +18,6 @@ export {
   PatchMapping,
   RequestMapping,
   RequestMethod,
-  setRequestMappingDefaultCfg,
 } from './RequestMapping'
 export { RequestParam } from './RequestParam'
 export { RestObject, RestObjectType } from './RestObject'

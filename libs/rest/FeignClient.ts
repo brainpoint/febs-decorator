@@ -11,6 +11,7 @@ import 'reflect-metadata'
 import * as path from 'path'
 import * as febs from 'febs-browser'
 import { Fetch } from '@/types/fetch'
+import { logFeignClient, RestLogLevel, setFeignLoggerLevel } from '../logger'
 var qs = require('../utils/qs/dist')
 
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg')
@@ -22,6 +23,14 @@ type _FeignClientMetadataType = {
   path: string
 }
 
+export type MicroserviceInfo = {
+  serviceName: string,
+  ip: string,
+  port: number,
+  weight?: number,
+  metadata?: any
+}
+
 /**
  * @desc: 设置默认的请求配置. 可用于设置fetch对象, 重试信息等.
  *
@@ -31,8 +40,8 @@ type _FeignClientMetadataType = {
  *   import * as fetch from 'node-fetch'
  *   setFeignClientDefaultCfg({
  *      fetch:fetch,
- *      findServiceCallback(serviceName, excludeHost):Promise<ip:string, port:number>=> {
- *        return Promise.resolve({ip, port}); 
+ *      findServiceCallback(serviceName, excludeHost):Promise<MicroserviceInfo>=> {
+ *        return Promise.resolve({ip, port, serviceName}); 
  *      }
  *   });
  */
@@ -43,23 +52,36 @@ export function setFeignClientDefaultCfg(cfg: {
   maxAutoRetriesNextServer?: number
   /** 同一实例的重试次数; (默认2) */
   maxAutoRetries?: number
+  /** 每次请求需要附加的header */
+  headers?: { [key: string]: string|string[] },
+  /** 请求超时, 默认20000ms */
+  timeout?: number,
+  /** 日志级别. */
+  logLevel?: RestLogLevel,
   /** 获取指定service的回调. */
   findServiceCallback: (
     serviceName: string,
     excludeHost: string
-  ) => Promise<{
-    ip: string
-    port: number
-  }>,
-  /** 处理收到的对象receiveMessage, 将正确的结果存储至retureMessage中 */
-  filterMessageCallback?: (receiveMessage:any, retureMessage:any)=>void,
+  ) => Promise<MicroserviceInfo>,
+  /** 
+   * 处理收到的对象receiveMessage, 将正确的结果存储至retureMessage中. 
+   * 若抛出异常则表明消息错误, 将会由RestObject传递给controller.
+   */
+  filterMessageCallback?: (receiveMessage: any, returnMessage: any, requestService: string, requestUrl: string) => void,
+  /** 在front-end使用时设置跨域等信息 */
+  mode?: string|'no-cors'|'cors'|'same-origin',
+  credentials?: 'include'|null,
 }) {
+
+  if (cfg.hasOwnProperty('logLevel')) {
+    setFeignLoggerLevel(cfg.logLevel);
+  }
+
   let c = (global as any)[DefaultFeignClientCfg]
   if (!c) {
     c = {};
     (global as any)[DefaultFeignClientCfg] = c;
   }
-  c = c || {}
   if (cfg.hasOwnProperty('fetch')) {
     c.fetch = cfg.fetch
   }
@@ -75,27 +97,40 @@ export function setFeignClientDefaultCfg(cfg: {
   if (cfg.hasOwnProperty('filterMessageCallback')) {
     c.filterMessageCallback = cfg.filterMessageCallback
   }
-  
+  if (cfg.hasOwnProperty('mode')) {
+    c.mode = cfg.mode
+  }
+  if (cfg.hasOwnProperty('headers')) {
+    c.headers = febs.utils.mergeMap(cfg.headers);
+  }
+  if (cfg.hasOwnProperty('timeout')) {
+    c.timeout = cfg.timeout
+  }
+  if (cfg.hasOwnProperty('credentials')) {
+    c.credentials = cfg.credentials
+  }
 }
 
-function getFeignClientDefaultCfg(): {
+export function getFeignClientDefaultCfg(): {
   fetch?: Fetch
   maxAutoRetriesNextServer?: number
   maxAutoRetries?: number,
+  headers?: { [key: string]: string|string[] },
+  timeout?: number,
   findServiceCallback: (
     serviceName: string,
     excludeHost: string
-  ) => Promise<{
-    ip: string
-    port: number
-  }>,
-  filterMessageCallback?: (receiveMessage:any, retureMessage:any)=>void,
+  ) => Promise<MicroserviceInfo>,
+  filterMessageCallback?: (receiveMessage: any, returnMessage: any, requestService: string, requestUrl: string) => void,
+  mode?: string|'no-cors'|'cors'|'same-origin',
+  credentials?: 'include'|null,
 } {
   let cfg = (global as any)[DefaultFeignClientCfg]
   cfg = cfg || {}
   cfg.fetch = cfg.fetch || febs.net.fetch
   cfg.maxAutoRetriesNextServer = cfg.maxAutoRetriesNextServer || 3
   cfg.maxAutoRetries = cfg.maxAutoRetries || 2
+  cfg.timeout = cfg.timeout || 20000
   return cfg
 }
 
@@ -181,10 +216,7 @@ export async function _FeignClientDo(
 
   // net request.
   for (let i = 0; i < feignClientCfg.maxAutoRetriesNextServer; i++) {
-    let host: {
-      ip: string;
-      port: number;
-    };
+    let host: MicroserviceInfo;
     try {
       host = await feignClientCfg.findServiceCallback(meta.name, excludeHost);
       if (!host) {
@@ -195,7 +227,8 @@ export async function _FeignClientDo(
     }
     
     excludeHost = `${host.ip}:${host.port}`;
-    let uri = febs.string.isEmpty(meta.url) ? path.join(excludeHost, meta.path, url) : meta.url;
+    let uriPathname = febs.string.isEmpty(meta.url) ? path.join(meta.path, url) : meta.url;
+    let uri = febs.string.isEmpty(meta.url) ? path.join(excludeHost, uriPathname) : uriPathname;
     if (host.port == 443) {
       if (uri[0] == '/') uri = 'https:/' + uri;
       else uri = 'https://' + uri;
@@ -207,7 +240,7 @@ export async function _FeignClientDo(
     request = {
       method: requestMapping.method.toString(),
       mode: requestMapping.mode,
-      headers: requestMapping.headers,
+      headers: febs.utils.mergeMap(feignClientCfg.headers, requestMapping.headers),
       timeout: requestMapping.timeout,
       credentials: requestMapping.credentials,
       body: requestMapping.body,
@@ -215,15 +248,18 @@ export async function _FeignClientDo(
     }
     
     for (let j = 0; j < feignClientCfg.maxAutoRetries; j++) {
-      let r:any;
+      let r: any;
+      let interval: number = Date.now();
       try {
 
         response = null;
         responseMsg = null;
         lastError = null;
-        
+
         let ret = await feignClientCfg.fetch(uri, request);
         response = ret;
+
+        interval = Date.now() - interval;
 
         // ok.
         let contentType = ret.headers.get('content-type') || null;
@@ -232,18 +268,23 @@ export async function _FeignClientDo(
         // formdata.
         if (febs.string.isEmpty(contentType) || contentType.indexOf('application/x-www-form-urlencoded') >= 0) {
           let txt = await ret.text();
+          logFeignClient(request, febs.utils.mergeMap(response, {body: txt}), interval);
+
           r = qs.parse(txt)
         }
         // json.
         else if (contentType.indexOf('application/json') >= 0) {
           r = await ret.json();
+          logFeignClient(request, febs.utils.mergeMap(response, {body: r}), interval);
         }
         // stream.
         else {
           r = await ret.blob();
+          logFeignClient(request, febs.utils.mergeMap(response, {body: r}), interval);
         }
         responseMsg = r;
       } catch (e) {
+        logFeignClient(request, {err:e} as any, 0);
         lastError = e;
         console.error(e);
         continue;
@@ -257,7 +298,7 @@ export async function _FeignClientDo(
         else if (!dataType) {
           if (feignClientCfg.filterMessageCallback) {
             let rr = {};
-            feignClientCfg.filterMessageCallback(r, rr);
+            feignClientCfg.filterMessageCallback(r, rr, meta.name, uriPathname);
             return rr;
           }
           else {
@@ -266,14 +307,25 @@ export async function _FeignClientDo(
         } else {
           let o = new dataType();
           if (feignClientCfg.filterMessageCallback) {
-            feignClientCfg.filterMessageCallback(r, o);
+            feignClientCfg.filterMessageCallback(r, o, meta.name, uriPathname);
             return o;
           }
           else {
-            for (const key in r) {
-              const element = r[key];
-              o[key] = element;
+            if (o instanceof String) {
+              o = r;
             }
+            else if (o instanceof Number) {
+              o = new Number(r).valueOf();
+            }
+            else if (o instanceof Boolean) {
+              o = (r === 'true' || r === '1' || r === true || r === 1);
+            }
+            else {
+              for (const key in r) {
+                const element = r[key];
+                o[key] = element;
+              }
+            } // if..else.
           }
           return o;
         }

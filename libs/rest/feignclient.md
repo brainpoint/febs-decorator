@@ -53,15 +53,30 @@ import { setFeignClientDefaultCfg } from "febs-decorator";
  */
 setFeignClientDefaultCfg({
   /** 网络请求对象, 当在back-end使用时需设置; 可使用 node-fetch等兼容api */
-  fetch: febs.net.fetch as any,
+  fetch?: fetch.Fetch
   /** 最大更换实例次数; (默认3) */
-  maxAutoRetriesNextServer: 3
+  maxAutoRetriesNextServer?: number
   /** 同一实例的重试次数; (默认2) */
-  maxAutoRetries: 2,
-  // 查询指定的微服务单元.
-  findServiceCallback: onFindServiceCallback,
-  // 统一过滤网络消息, 返回正确的信息; (可用于统一处理errCode等场景)
-  filterMessageCallback: onFilterMessageCallback
+  maxAutoRetries?: number
+  /** 每次请求需要附加的header */
+  headers?: { [key: string]: string|string[] },
+  /** 请求超时, 默认20000ms */
+  timeout?: number,
+  /** 日志级别. */
+  logLevel?: RestLogLevel,
+  /** 获取指定service的回调. */
+  findServiceCallback: (
+    serviceName: string,
+    excludeHost: string
+  ) => Promise<MicroserviceInfo>,
+  /** 
+   * 处理收到的对象receiveMessage, 将正确的结果存储至retureMessage中. 
+   * 若抛出异常则表明消息错误, 将会由RestObject传递给controller.
+   */
+  filterMessageCallback?: (receiveMessage: any, returnMessage: any, requestService: string, requestUrl: string) => void,
+  /** 在front-end使用时设置跨域等信息 */
+  mode?: string|'no-cors'|'cors'|'same-origin',
+  credentials?: 'include'|null,
 })
 ```
 
@@ -78,10 +93,7 @@ setFeignClientDefaultCfg({
 async function onFindServiceCallback(
   serviceName: string,
   excludeHost: string
-): Promise<{
-  ip: string
-  port: number
-}> {
+): Promise<{MicroserviceInfo}> {
   // use nacos or eureka api to get a host.
   let hosts = await microservice.getNacosService(serviceName);
   if (!hosts || hosts.length == 0) {
@@ -132,12 +144,12 @@ async function onFindServiceCallback(
 <summary>代码示例</summary>
 
 ```js
-function onFilterMessageCallback(receiveMessage: any, retureMessage: any) {
+function onFilterMessageCallback(receiveMessage: any, returnMessage: any, requestService: string, requestUrl: string) {
   // errCode == 200 时为正确
   if (receiveMessage.errCode == 200) {
     if (receiveMessage.data) {  // 业务数据.
       for (const key in receiveMessage.data) {
-        retureMessage[key] = receiveMessage.data[key];
+        returnMessage[key] = receiveMessage.data[key];
       }
     }
   }

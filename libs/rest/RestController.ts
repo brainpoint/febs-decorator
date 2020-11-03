@@ -11,6 +11,8 @@ import 'reflect-metadata'
 import * as path from 'path'
 import * as febs from 'febs-browser'
 import { RestRequest, RestResponse } from '@/types/rest_request';
+import { getServiceInstances, Service } from '../Service';
+import { logRest, RestLogLevel, setRestLoggerLevel } from '../logger';
 var qs = require('../utils/qs/dist')
 
 const DefaultRestControllerCfg = Symbol('DefaultRestControllerCfg')
@@ -32,6 +34,7 @@ type _RestControllerRouterType = {
   pathVars?: {[name:string]:number},
   reg?: RegExp,
   path?: string,
+  method: string,
 };
 
 /**
@@ -40,7 +43,7 @@ type _RestControllerRouterType = {
 function getRestControllerRouters(): _RestControllerRouterType[] {
   let routers = (global as any)[RestControllerRouters];
   if (!routers) {
-    routers = {};
+    routers = [];
     (global as any)[RestControllerRouters] = routers;
   }
   return routers;
@@ -50,22 +53,52 @@ function getRestControllerRouters(): _RestControllerRouterType[] {
  * @desc: 设置默认的配置. 可用于全局response消息的处理等.
  */
 export function setRestControllerDefaultCfg(cfg: {
+  /** 日志级别. */
+  logLevel?: RestLogLevel,
+  /** 如果response对象中不存在对应的header, 则附加的header */
+  headers?: { [key: string]: string|string[] },
   /** 处理controller处理方法返回的对象returnMessage, 并返回需要response到请求端的内容 */
-  filterMessageCallback?: (returnMessage:any)=>any,
+  filterMessageCallback?: (returnMessage: any, requestUrl: string) => any,
+  /** 接收消息时发生数据类型等错误. */
+  errorRequestCallback?: (error:Error, request:RestRequest, response:RestResponse ) => void,
+  /** 响应消息时发生错误. */
+  errorResponseCallback?: (error:Error, request:RestRequest, response:RestResponse ) => void,
+  /** 404. */
+  notFoundCallback?: (request:RestRequest, response:RestResponse ) => void,
 }) {
+
+  if (cfg.hasOwnProperty('logLevel')) {
+    setRestLoggerLevel(cfg.logLevel);
+  }
+
   let c = (global as any)[DefaultRestControllerCfg]
   if (!c) {
     c = {};
     (global as any)[DefaultRestControllerCfg] = c;
   }
-  c = c || {}
   if (cfg.hasOwnProperty('filterMessageCallback')) {
     c.filterMessageCallback = cfg.filterMessageCallback
+  }
+  if (cfg.hasOwnProperty('errorRequestCallback')) {
+    c.errorRequestCallback = cfg.errorRequestCallback
+  }
+  if (cfg.hasOwnProperty('errorResponseCallback')) {
+    c.errorResponseCallback = cfg.errorResponseCallback
+  }
+  if (cfg.hasOwnProperty('notFoundCallback')) {
+    c.notFoundCallback = cfg.notFoundCallback
+  }
+  if (cfg.hasOwnProperty('headers')) {
+    c.headers = febs.utils.mergeMap(cfg.headers);
   }
 }
 
 function getRestControllerDefaultCfg(): {
-  filterMessageCallback?: (returnMessage:any)=>any,
+  headers?: { [key: string]: string|string[] },
+  filterMessageCallback?: (returnMessage:any, requestUrl: string)=>any,
+  errorRequestCallback?: (error:Error, request:RestRequest, response:RestResponse ) => any,
+  errorResponseCallback?: (error:Error, request:RestRequest, response:RestResponse ) => any,
+  notFoundCallback?: (request:RestRequest, response:RestResponse ) => any,
 } {
   let cfg = (global as any)[DefaultRestControllerCfg]
   cfg = cfg || {}
@@ -85,27 +118,29 @@ export function RestController(cfg?: {
   cfg.path = cfg.path || ''
 
   return (target: Function): void => {
-
+    Service(target, 'RestController');
+    let instance = getServiceInstances('RestController');
+    instance = instance[instance.length - 1];
+      
     // store routers.
     let routers: _RestControllerRouterType[] = Reflect.getOwnMetadata(_RestControllerRouterMetadataKey, target);
     if (routers) {
       let globalRouters = getRestControllerRouters();
       for (let p in routers) {
         let val = routers[p];
-        let pp = path.join(cfg.path, p);
-        let reg = getPathReg(pp);
+        let pp = path.join(cfg.path, val.path);
+        let reg = getPathReg(pp, val.params);
         val.reg = reg.reg;
         val.pathVars = reg.pathVars;
+        val.target = instance;
         // delete val.path;
         globalRouters.push(val);
       }
     } // if.
 
-
     Reflect.defineMetadata(
       _RestControllerMetadataKey,
-      {
-      },
+      {},
       target
     )
   }
@@ -114,16 +149,17 @@ export function RestController(cfg?: {
 /**
 * @desc 处理请求; 
 * @description 在web框架收到http请求时, 调用此接口后将会触发指定的RestController进行处理. 当匹配到一个处理后即中断后续匹配.
-* @return 返回值表明是否匹配到适当的router.
+* @return 返回null表明未匹配到适当的router.
 */
 export async function CallRestControllerRoute(
   request: RestRequest,
-  response: RestResponse,
-): Promise<boolean> {
+): Promise<RestResponse> {
   
+  let interval: number = Date.now();
+
   let rotuers = getRestControllerRouters();
   if (!rotuers) {
-    return Promise.resolve(false);
+    return Promise.resolve(null);
   }
 
   let pathname: string = request.url;
@@ -139,29 +175,91 @@ export async function CallRestControllerRoute(
     pathname = pathname.substr(0, qsPos);
   }
 
+  let cfg = getRestControllerDefaultCfg();
+
   for (let i = 0; i < rotuers.length; i++) {
     let router = rotuers[i];
-    if (router.reg.test(pathname)) {
+    if (router.method == request.method.toLowerCase() && router.reg.test(pathname)) {
 
-      let ret = await router.target[router.functionPropertyKey]({
+      let response = {
+        headers: {},
+        status: 200,
+        body: null as any
+      }
+
+      let matchInfo = { match: true, requestError: null as Error, responseError: null as Error };
+      let ret;
+      ret = await router.target[router.functionPropertyKey]({
         pathname: pathname,
         querystring,
         request,
         response,
         params: router.params,
         pathVars: router.pathVars,
-      });
+      }, matchInfo);
 
-      let cfg = getRestControllerDefaultCfg();
+      // requestError.
+      if (matchInfo.requestError) {
+        interval = Date.now() - interval;
+        logRest(request, { err: '[Error] request error' } as any, interval);
+        if (cfg.errorRequestCallback) {
+          cfg.errorRequestCallback(matchInfo.requestError, request, response);
+        }
+        return Promise.resolve(null);
+      }
+
+      // responseError.
+      if (matchInfo.responseError) {
+        interval = Date.now() - interval;
+        logRest(request, { err: '[Error] response error' } as any, interval);
+        if (cfg.errorResponseCallback) {
+          cfg.errorResponseCallback(matchInfo.responseError, request, response);
+        }
+        return Promise.resolve(null);
+      }
+
+      // 404.
+      if (!matchInfo.match) {
+        interval = Date.now() - interval;
+        logRest(request, { err: '[404] Route matched, but condition not satisfied' } as any, interval);
+        if (cfg.notFoundCallback) {
+          cfg.notFoundCallback(request, response);
+        }
+        return Promise.resolve(null);
+      }
+
       if (cfg.filterMessageCallback) {
-        ret = cfg.filterMessageCallback(ret);
+        ret = cfg.filterMessageCallback(ret, request.url);
       }
       response.body = ret;
-      return Promise.resolve(true);
+
+      interval = Date.now() - interval;
+      logRest(request, response, interval);
+      return Promise.resolve(response);
     }
   } // for.
 
-  return Promise.resolve(false);
+  interval = Date.now() - interval;
+  logRest(request, { err: '[404] No match Router' } as any, interval);
+
+  if (cfg.notFoundCallback) {
+    // response.
+    let response = {
+      headers: {} as any,
+      status: 200,
+      body: null as any
+    }
+    // save headers.
+    const defaultHeaders = febs.utils.mergeMap(cfg.headers);
+    if (defaultHeaders) {
+      for (const key in defaultHeaders) {
+        response.headers[key] = defaultHeaders[key];
+      }
+    }
+    
+    cfg.notFoundCallback(request, response);
+  }
+  return Promise.resolve(null);
 }
 
 /**
@@ -170,6 +268,8 @@ export async function CallRestControllerRoute(
 */
 export function _RestControllerDo(
   target: Object,
+  matchInfo: { match: boolean, requestError: Error, responseError: Error },
+  headers: { [key: string]: string|string[] },
   dataType: any,
   args: IArguments,
   pathname: string,
@@ -185,6 +285,15 @@ export function _RestControllerDo(
   }[],
   pathVars?: {[name:string]:number},
 ): boolean {
+
+  // save headers.
+  const defaultHeaders = febs.utils.mergeMap(getRestControllerDefaultCfg().headers, headers);
+  if (defaultHeaders) {
+    for (const key in defaultHeaders) {
+      response.headers[key] = defaultHeaders[key];
+    }
+  }
+
   args.length = 0;
   if (params) {
     for (let i = 0; i < params.length; i++) {
@@ -195,7 +304,7 @@ export function _RestControllerDo(
 
       // pathVariable.
       if (param.type == 'pv') {
-        let index = pathVars[param.name];
+        let index = pathVars['{' + param.name + '}'];
         if (!febs.utils.isNull(index)) {
           let data = pathname.split('/')[index];
           if (data) { decodeURIComponent(data); }
@@ -217,16 +326,33 @@ export function _RestControllerDo(
           args[param.parameterIndex] = request.body;
         }
         else {
-          let data = new dataType();
-          for (const key in request.body) {
-            data[key] = request.body[key];
+          try {
+            let data = new dataType();
+
+            if (data instanceof String) {
+              data = request.body;
+            }
+            else if (data instanceof Number) {
+              data = new Number(request.body).valueOf();
+            }
+            else if (data instanceof Boolean) {
+              data = (request.body === 'true' || request.body === '1' || request.body === true || request.body === 1);
+            }
+            else {
+              for (const key in request.body) {
+                data[key] = request.body[key];
+              }
+            } // if..else.
+
+            args[param.parameterIndex] = data;
+          } catch (e) {
+            matchInfo.requestError = e;
           }
-          args[param.parameterIndex] = data;
         } 
       }
       // requestParam.
       else if (param.type == 'rp') {
-        if (!querystring || !querystring[param.name]) {
+        if (!querystring || !querystring.hasOwnProperty(param.name)) {
           if (param.required && !param.defaultValue) {
             return false;
           }
@@ -255,40 +381,62 @@ export function _RestControllerDo(
  * 获得path的正则表达式.
  * @param path 
  */
-function getPathReg(p: string): { reg: RegExp, pathVars: {[name:string]:number} } {
-  // reg.
+function getPathReg(p: string, params: {
+    name?: string;
+    required?: boolean;
+    parameterIndex?: number;
+    defaultValue?: any;
+    type: "pv" | "rb" | "rp" | "ro";
+}[]): { reg: RegExp, pathVars: { [name: string]: number } } {
+  params = params || [];
+  if (p[0] != '/') p = '/' + p;
+  if (p[p.length - 1] == '/') p = p.substr(0, p.length - 1);
   p = febs.string.replace(p, '\\', '\\\\');
-  p = febs.string.replace(p, '[', '\\[');
-  p = febs.string.replace(p, ']', '\\]');
-  p = febs.string.replace(p, '(', '\\(');
-  p = febs.string.replace(p, ')', '\\)');
-  p = febs.string.replace(p, '{', '\\{');
-  p = febs.string.replace(p, '}', '\\}');
-  p = febs.string.replace(p, '|', '\\|');
-  p = febs.string.replace(p, '^', '\\^');
-  p = febs.string.replace(p, '?', '\\?');
-  p = febs.string.replace(p, '.', '\\.');
-  p = febs.string.replace(p, '+', '\\+');
-  p = febs.string.replace(p, '*', '\\*');
-  p = febs.string.replace(p, '$', '\\$');
-  p = febs.string.replace(p, ':', '\\:');
-  // p = febs.string.replace(p, '/', '\\/');
-  p = febs.string.replace(p, '-', '\\-');
-
-  // get {} vars.
-  let pathVars: {[name:string]:number} = {};
+  p = febs.string.replace(p, '[', '\[');
+  p = febs.string.replace(p, ']', '\]');
+  p = febs.string.replace(p, '(', '\(');
+  p = febs.string.replace(p, ')', '\)');
+  p = febs.string.replace(p, '{', '\{');
+  p = febs.string.replace(p, '}', '\}');
+  p = febs.string.replace(p, '|', '\|');
+  p = febs.string.replace(p, '^', '\^');
+  p = febs.string.replace(p, '?', '\?');
+  p = febs.string.replace(p, '.', '\.');
+  p = febs.string.replace(p, '+', '\+');
+  p = febs.string.replace(p, '*', '\*');
+  p = febs.string.replace(p, '$', '\$');
+  p = febs.string.replace(p, ':', '\:');
+  p = febs.string.replace(p, '-', '\-');
+  let pathVars = {} as any;
   let segs = p.split('/');
-  p = '';
+  p = '^\/';
+
+  let pvHadRequired = true;
   for (let i = 0; i < segs.length; i++) {
-    if (/^\\\{[a-zA-Z\$_][a-zA-Z\d_]*\\\}$/.test(segs[i])) {
-      p += '\\/[^/]+';
+    if (segs[i].length == 0) continue;
+    if (/^\{[a-zA-Z\$_][a-zA-Z\d_]*\}$/.test(segs[i])) {
+      p += '\/((?!.*\/).*)';
+      // required.
+      for (let j = 0; j < params.length; j++) {
+        if (params[j].type == 'pv' && '{' + params[j].name + '}' == segs[i]) {
+          if (!params[j].required) {
+            pvHadRequired = false;
+            p = '(' + p + ')?';
+          }
+          else if (!pvHadRequired) {
+            throw new Error(`@PathVariable '${params[j].name}': required cannot be 'true', pre-pathVariable required=false`);
+          }
+          break;
+        }
+      }
       pathVars[segs[i]] = i;
     }
     else {
-      p += '\\/' + segs[i];
+      if (p.length > 2) p += '\/';
+      p += segs[i];
     }
   }
-
+  p += '\/?(\\?.*)?$'
   return { reg: new RegExp(p), pathVars };
 }
 
@@ -305,7 +453,8 @@ export function _RestControllerPushRouter(targetObject: Object, target: Function
     parameterIndex?: number;
     defaultValue?: any;
     type: "pv" | "rb" | "rp" | "ro";
-  }[]
+  }[],
+  method: string,
 }): void {
 
   let routers: _RestControllerRouterType[] = Reflect.getOwnMetadata(_RestControllerRouterMetadataKey, target) || [];
@@ -316,6 +465,7 @@ export function _RestControllerPushRouter(targetObject: Object, target: Function
         functionPropertyKey: cfg.functionPropertyKey,
         params: cfg.params,
         path: cfg.path[i],
+        method: cfg.method.toLowerCase(),
       })
     }
   }
@@ -325,6 +475,7 @@ export function _RestControllerPushRouter(targetObject: Object, target: Function
       functionPropertyKey: cfg.functionPropertyKey,
       params: cfg.params,
       path: cfg.path,
+      method: cfg.method.toLowerCase(),
     });
   }
 

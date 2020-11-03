@@ -29,37 +29,71 @@ type _RequestBodyMetadataType = { required: boolean, parameterIndex: number, str
  * 
  * @returns {ParameterDecorator}
  */
+
+export function RequestBody(target: Object, propertyKey: string | symbol, parameterIndex: number): void;
 export function RequestBody(cfg: {
   /** 是否是必须存在; */
   required?: boolean,
   /** (用于request) 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
-  stringifyCallback?: (bodyData:any)=>string,
-}): ParameterDecorator {
-  cfg.required = febs.utils.isNull(cfg.required) ? true : cfg.required;
+  stringifyCallback?: (bodyData: any) => string,
+}): ParameterDecorator;
+export function RequestBody(...args: any[]) {
+
+  if (args.length == 1) {
+    let cfg = args[0];
+    cfg.required = febs.utils.isNull(cfg.required) ? true : cfg.required;
   
-  return (target: Object, propertyKey: string | symbol, parameterIndex: number): void => {
-    if (Reflect.hasOwnMetadata(_RequestBodyMetadataKey, target, propertyKey)) {
-      throw new febs.exception(
-        '@RequestBody must only one',
-        febs.exception.ERROR,
-        __filename,
-        __line,
-        __column
-      );
+    return (target: Object, propertyKey: string | symbol, parameterIndex: number): void => {
+      if (Reflect.hasOwnMetadata(_RequestBodyMetadataKey, target, propertyKey)) {
+        throw new febs.exception(
+          '@RequestBody must only one',
+          febs.exception.ERROR,
+          __filename,
+          __line,
+          __column
+        );
+      }
+
+      Reflect.defineMetadata(_RequestBodyMetadataKey, {
+        required: cfg.required,
+        stringifyCallback: cfg.stringifyCallback,
+        parameterIndex,
+      }, target, propertyKey);
+
+      _RequestMappingPushParams(target, {
+        required: cfg.required,
+        parameterIndex,
+        type: 'rb'
+      });
     }
-
-    Reflect.defineMetadata(_RequestBodyMetadataKey, {
-      required: cfg.required,
-      stringifyCallback: cfg.stringifyCallback,
-      parameterIndex,
-    }, target, propertyKey);
-
-    _RequestMappingPushParams(target, {
-      required: cfg.required,
-      parameterIndex,
-      type: 'rb'
-    });
   }
+  else {
+    let target = args[0];
+    let propertyKey = args[1];
+    let parameterIndex = args[2];
+
+    if (Reflect.hasOwnMetadata(_RequestBodyMetadataKey, target, propertyKey)) {
+        throw new febs.exception(
+          '@RequestBody must only one',
+          febs.exception.ERROR,
+          __filename,
+          __line,
+          __column
+        );
+      }
+
+      Reflect.defineMetadata(_RequestBodyMetadataKey, {
+        required: false,
+        stringifyCallback: null,
+        parameterIndex,
+      }, target, propertyKey);
+
+      _RequestMappingPushParams(target, {
+        required: false,
+        parameterIndex,
+        type: 'rb'
+      });
+  } // if..else.
 }
 
 export function _RequestBodyDo(target: Object, propertyKey: string | symbol, args: IArguments, requestMapping: any): void {
