@@ -11,7 +11,7 @@ import { getServiceInstances, Service } from '..'
 import { FeignClient, RequestMapping, RequestMethod, setFeignClientDefaultCfg, MicroserviceInfo } from '..'
 import { except_fail, except_success } from './lib'
 
-@Service
+@Service()
 class TestService {
   test() {}
 }

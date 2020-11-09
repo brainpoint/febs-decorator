@@ -32,8 +32,13 @@
     "PathVariable",
     "RequestBody",
     "RequestMapping",
+    "postmapping",
+    "getmapping",
     "RequestParam",
-    "request"
+    "restcontroller",
+    "request",
+    "service",
+    "autowired"
   ],
   "engines": {
     "node": ">=8"
@@ -52,5 +57,5 @@
     }
   ],
   "name": "febs-decorator",
-  "version": "0.2.0"
+  "version": "0.2.1"
 }

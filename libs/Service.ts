@@ -10,11 +10,13 @@
 import 'reflect-metadata'
 
 const ServiceInstance = Symbol('ServiceInstance')
+export const AutowiredInstances = Symbol('AutowiredInstances')
+
 
 /**
 * @desc 获得指定类型的service.
 */
-export function getServiceInstances(key: string): any[] {
+export function getServiceInstances(key: any): any[] {
   let instances = (global as any)[ServiceInstance];
   if (!instances) {
     instances = {};
@@ -30,18 +32,43 @@ export function getServiceInstances(key: string): any[] {
  *
  * @returns {ClassDecorator}
  */
-export function Service(target: Function, key?: string, singletonKey?: boolean): void {
-  key = key || '';
-  let instances = (global as any)[ServiceInstance];
-  if (!instances) {
-    instances = {};
-    (global as any)[ServiceInstance] = instances;
-  }
-  instances[key] = instances[key] || [];
-  if (singletonKey && instances[key].length > 0) {
-    throw new Error(`@Service '${key}': There can only be one instance`)
-  }
+export function Service(singletonKey?: boolean): ClassDecorator {
 
-  let instance = new (target as any)();
-  instances[key].push(instance);
+  return (target: Function): void => {
+    let instances = (global as any)[ServiceInstance];
+    if (!instances) {
+      instances = {};
+      (global as any)[ServiceInstance] = instances;
+    }
+    instances[target as any] = instances[target as any] || [];
+    if (singletonKey && instances[target as any].length > 0) {
+      throw new Error(`@Service '${target}': There can only be one instance`)
+    }
+
+    let instance = new (target as any)();
+    instances[target as any].push(instance);
+
+    finishAutowired(target);
+  }
+}
+
+/**
+* @desc: 完成装配.
+*/
+function finishAutowired(target:any) {
+  (global as any)[AutowiredInstances] = (global as any)[AutowiredInstances] || [];
+  let autos:{
+      target: any,
+      propertyKey:string,
+      type: Function
+  }[] = (global as any)[AutowiredInstances];
+  
+  for (const key in autos) {
+    const element = autos[key];
+    if (element && element.type === target) {
+      let ins = getServiceInstances(element.type);
+      element.target[element.propertyKey] = ins ? ins[ins.length - 1] : null;
+      autos[key] = null;
+    }
+  }
 }

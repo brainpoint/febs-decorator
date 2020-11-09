@@ -24,7 +24,7 @@ let TestService = class TestService {
     test() { }
 };
 TestService = __decorate([
-    __1.Service
+    __1.Service()
 ], TestService);
 console.log(typeof __1.getServiceInstances("")[0].test === 'function');
 let TestController = class TestController {

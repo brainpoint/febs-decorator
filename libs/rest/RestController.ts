@@ -117,9 +117,11 @@ export function RestController(cfg?: {
   cfg = cfg || {};
   cfg.path = cfg.path || ''
 
+  let fooService = Service(true);
+
   return (target: Function): void => {
-    Service(target, 'RestController');
-    let instance = getServiceInstances('RestController');
+    fooService(target);
+    let instance = getServiceInstances(target);
     instance = instance[instance.length - 1];
       
     // store routers.

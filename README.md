@@ -34,14 +34,15 @@ let obj = new BeanA();  // will throw a exception.
 Service Example:
 
 ```js
-import {Service, getServiceInstances} from 'febs-decorator';
+import {Service} from 'febs-decorator';
 
-@Service
+@Service()
 class BeanDemo {
 }
 
 // get service instances.
-let objArray:any[] = getServiceInstances();
+@Autowired(BeanDemo)
+let objArray:any[];
 ```
 
 FeignClient Example:

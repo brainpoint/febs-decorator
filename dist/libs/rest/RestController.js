@@ -62,9 +62,10 @@ function getRestControllerDefaultCfg() {
 function RestController(cfg) {
     cfg = cfg || {};
     cfg.path = cfg.path || '';
+    let fooService = Service_1.Service(true);
     return (target) => {
-        Service_1.Service(target, 'RestController');
-        let instance = Service_1.getServiceInstances('RestController');
+        fooService(target);
+        let instance = Service_1.getServiceInstances(target);
         instance = instance[instance.length - 1];
         let routers = Reflect.getOwnMetadata(_RestControllerRouterMetadataKey, target);
         if (routers) {

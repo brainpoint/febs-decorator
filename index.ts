@@ -8,5 +8,6 @@
 */
 
 export * from './libs/Service';
+export * from './libs/Autowired';
 export * from './libs/validator';
 export * from './libs/rest';
