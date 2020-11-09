@@ -242,6 +242,7 @@ class DemoService {
     console.log(restObject.response) // response对象.
     console.log(restObject.responseMsg) // 已经从response中读取的消息.
     console.log(restObject.error)       // 引起进入fallback的错误.
+    console.log(restObject.ctx)         // web 上下文对象; 如koa.Context等.
 
     throw new Error('fallback deal');
   }

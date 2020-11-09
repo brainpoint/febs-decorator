@@ -84,7 +84,7 @@ function RestController(cfg) {
     };
 }
 exports.RestController = RestController;
-function CallRestControllerRoute(request) {
+function CallRestControllerRoute(request, ctx) {
     return __awaiter(this, void 0, void 0, function* () {
         let interval = Date.now();
         let rotuers = getRestControllerRouters();
@@ -119,7 +119,7 @@ function CallRestControllerRoute(request) {
                     response,
                     params: router.params,
                     pathVars: router.pathVars,
-                }, matchInfo);
+                }, matchInfo, ctx);
                 if (matchInfo.requestError) {
                     interval = Date.now() - interval;
                     logger_1.logRest(request, { err: '[Error] request error' }, interval);
@@ -173,7 +173,7 @@ function CallRestControllerRoute(request) {
     });
 }
 exports.CallRestControllerRoute = CallRestControllerRoute;
-function _RestControllerDo(target, matchInfo, headers, dataType, args, pathname, querystring, request, response, params, pathVars) {
+function _RestControllerDo(target, ctx, matchInfo, headers, dataType, args, pathname, querystring, request, response, params, pathVars) {
     const defaultHeaders = febs.utils.mergeMap(getRestControllerDefaultCfg().headers, headers);
     if (defaultHeaders) {
         for (const key in defaultHeaders) {
@@ -251,6 +251,7 @@ function _RestControllerDo(target, matchInfo, headers, dataType, args, pathname,
                     response,
                     responseMsg: null,
                     error: null,
+                    ctx,
                 };
             }
         }

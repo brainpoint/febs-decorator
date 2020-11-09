@@ -284,7 +284,9 @@ export type RestObjectType = {
   /** 已经从response对象中读取的消息 */
   responseMsg: any;
   /** 处理过程中发生的错误 */
-  error: Error
+  error: Error;
+  /** web 上下文对象; 如koa.Context等 */
+  ctx: any;
 };
 
 /**
@@ -330,4 +332,5 @@ export function setRestControllerDefaultCfg(cfg: {
 */
 export function CallRestControllerRoute(
   request: Rest.RestRequest,
+  ctx: any,
 ): Promise<Rest.RestResponse>;

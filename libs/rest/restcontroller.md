@@ -65,14 +65,14 @@ import * as febs from 'febs';
 import { CallRestControllerRoute } from "febs-decorator";
 
 /**
-* @desc 在网络请求到来时处理请求; 
+* @desc 处理请求; 
 * @description 在web框架收到http请求时, 调用此接口后将会触发指定的RestController进行处理. 当匹配到一个处理后即中断后续匹配.
-* @return 返回值表明是否匹配到适当的router.
+* @return 返回null表明未匹配到适当的router.
 */
-CallRestControllerRoute(
+function CallRestControllerRoute(
   request: Rest.RestRequest,
-  response: Rest.RestResponse,
-): Promise<boolean>;
+  ctx: any,
+): Promise<Rest.RestResponse>;
 ```
 
 ## @RestController

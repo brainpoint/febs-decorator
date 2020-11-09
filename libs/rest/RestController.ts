@@ -155,6 +155,7 @@ export function RestController(cfg?: {
 */
 export async function CallRestControllerRoute(
   request: RestRequest,
+  ctx: any,
 ): Promise<RestResponse> {
   
   let interval: number = Date.now();
@@ -198,7 +199,7 @@ export async function CallRestControllerRoute(
         response,
         params: router.params,
         pathVars: router.pathVars,
-      }, matchInfo);
+      }, matchInfo, ctx);
 
       // requestError.
       if (matchInfo.requestError) {
@@ -270,6 +271,7 @@ export async function CallRestControllerRoute(
 */
 export function _RestControllerDo(
   target: Object,
+  ctx: any,
   matchInfo: { match: boolean, requestError: Error, responseError: Error },
   headers: { [key: string]: string|string[] },
   dataType: any,
@@ -371,6 +373,7 @@ export function _RestControllerDo(
           response,
           responseMsg: null,
           error: null,
+          ctx,
         };
       }
     } // for.

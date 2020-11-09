@@ -209,7 +209,8 @@ export function RequestMapping(cfg: {
           pathVars?: { [name: string]: number },
         } = arguments[0];
         let matchInfo: { match: boolean, requestError: Error, responseError: Error } = arguments[1];
-        if (_RestControllerDo(target, matchInfo, cfg.headers, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars)) {
+        let ctx: any = arguments[2];
+        if (_RestControllerDo(target, ctx, matchInfo, cfg.headers, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars)) {
           try {
             return method.apply(this, arguments);
           } catch (e) {
