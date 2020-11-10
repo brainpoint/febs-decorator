@@ -112,37 +112,45 @@ function CallRestControllerRoute(request, ctx) {
                 };
                 let matchInfo = { match: true, requestError: null, responseError: null };
                 let ret;
-                ret = yield router.target[router.functionPropertyKey]({
-                    pathname: pathname,
-                    querystring,
-                    request,
-                    response,
-                    params: router.params,
-                    pathVars: router.pathVars,
-                }, matchInfo, ctx);
+                try {
+                    ret = yield router.target[router.functionPropertyKey]({
+                        pathname: pathname,
+                        querystring,
+                        request,
+                        response,
+                        params: router.params,
+                        pathVars: router.pathVars,
+                    }, matchInfo, ctx);
+                }
+                catch (err) {
+                    matchInfo.responseError = err;
+                }
                 if (matchInfo.requestError) {
+                    response.status = 400;
                     interval = Date.now() - interval;
                     logger_1.logRest(request, { err: '[Error] request error' }, interval);
                     if (cfg.errorRequestCallback) {
                         cfg.errorRequestCallback(matchInfo.requestError, request, response);
                     }
-                    return Promise.resolve(null);
+                    return Promise.resolve(response);
                 }
                 if (matchInfo.responseError) {
+                    response.status = 500;
                     interval = Date.now() - interval;
                     logger_1.logRest(request, { err: '[Error] response error' }, interval);
                     if (cfg.errorResponseCallback) {
                         cfg.errorResponseCallback(matchInfo.responseError, request, response);
                     }
-                    return Promise.resolve(null);
+                    return Promise.resolve(response);
                 }
                 if (!matchInfo.match) {
                     interval = Date.now() - interval;
                     logger_1.logRest(request, { err: '[404] Route matched, but condition not satisfied' }, interval);
+                    response.status = 404;
                     if (cfg.notFoundCallback) {
                         cfg.notFoundCallback(request, response);
                     }
-                    return Promise.resolve(null);
+                    return Promise.resolve(response);
                 }
                 if (!response.body) {
                     if (cfg.filterMessageCallback) {
@@ -157,12 +165,12 @@ function CallRestControllerRoute(request, ctx) {
         }
         interval = Date.now() - interval;
         logger_1.logRest(request, { err: '[404] No match Router' }, interval);
+        let response = {
+            headers: {},
+            status: 404,
+            body: null
+        };
         if (cfg.notFoundCallback) {
-            let response = {
-                headers: {},
-                status: 200,
-                body: null
-            };
             const defaultHeaders = febs.utils.mergeMap(cfg.headers);
             if (defaultHeaders) {
                 for (const key in defaultHeaders) {
@@ -171,7 +179,7 @@ function CallRestControllerRoute(request, ctx) {
             }
             cfg.notFoundCallback(request, response);
         }
-        return Promise.resolve(null);
+        return Promise.resolve(response);
     });
 }
 exports.CallRestControllerRoute = CallRestControllerRoute;

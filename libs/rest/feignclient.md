@@ -16,6 +16,8 @@ import {
   FeignClient,
   RequestMapping, 
   RequestMethod,
+  RestObject,
+  RestObjectTypeFeign,
 } from "febs-decorator";
 
 @FeignClient({ name: 'base' })
@@ -24,7 +26,7 @@ class BaseService {
    * 请求 base服务中的 /api接口.
    */
   @RequestMapping({ path: '/api', method: RequestMethod.GET, dataType:BeanDemo })
-  async request(): Promise<BeanDemo> {
+  async request(@RestObject obj?: RestObjectTypeFeign): Promise<BeanDemo> {
     // fallback.
     // 当使用@FeignClient时, @RequestMapping所修饰的方法体即是 fallback.
     throw new Error('Message Error');

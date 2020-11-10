@@ -67,7 +67,16 @@ function RequestMapping(cfg) {
                 let cfgp = arguments[0];
                 let matchInfo = arguments[1];
                 let ctx = arguments[2];
-                if (RestController_1._RestControllerDo(target, ctx, matchInfo, cfg.headers, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars)) {
+                let ret;
+                try {
+                    ret = RestController_1._RestControllerDo(target, ctx, matchInfo, cfg.headers, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars);
+                }
+                catch (err) {
+                    if (matchInfo) {
+                        matchInfo.requestError = err;
+                    }
+                }
+                if (ret) {
                     try {
                         return method.apply(this, arguments);
                     }

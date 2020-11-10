@@ -17,21 +17,55 @@ const _RestObjectMetadataKey = Symbol('_RestObjectMetadataKey');
 
 type _RestObjectMetadataType = { parameterIndex: number };
 
+
 /**
  * @desc RestObject参数类型.
  */
-export type RestObjectType = {
-  /** request对象 */
+export type RestObjectType<T = any> = {
+  /** request对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
   request: Fetch.Request|Rest.RestRequest;
-  /** response对象 */
+  /** response对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
   response: Fetch.Response|Rest.RestResponse;
   /** 已经从response对象中读取的消息 */
   responseMsg: any;
   /** 处理过程中发生的错误 */
   error: Error;
   /** web 上下文对象; 如koa.Context等 */
-  ctx: any;
+  ctx: T;
 };
+
+/**
+ * @desc RestObject参数类型. 用于FeignClient.
+ */
+export type RestObjectTypeFeign<T = any> = {
+  /** request对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  request: Fetch.Request;
+  /** response对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  response: Fetch.Response;
+  /** 已经从response对象中读取的消息 */
+  responseMsg: any;
+  /** 处理过程中发生的错误 */
+  error: Error;
+  /** web 上下文对象; 如koa.Context等 */
+  ctx: T;
+};
+
+/**
+ * @desc RestObject参数类型. 用于FeignClient.
+ */
+export type RestObjectTypeRest<T = any> = {
+  /** request对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  request: Rest.RestRequest;
+  /** response对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  response: Rest.RestResponse;
+  /** 已经从response对象中读取的消息 */
+  responseMsg: any;
+  /** 处理过程中发生的错误 */
+  error: Error;
+  /** web 上下文对象; 如koa.Context等 */
+  ctx: T;
+};
+
 
 /**
  * @desc 用于映射请求中的Rest对象, 可以对Request,Response等内容做特殊处理.

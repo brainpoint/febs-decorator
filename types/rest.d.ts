@@ -8,16 +8,6 @@ import * as Rest from './rest_request.d';
 
 
 /**
- * @desc ResponseBody参数类型.
- */
-export type ResponseBodyType = {
-  /** 接收到的原始数据 */
-  sourceMessage: any;
-  /** 处理过程中发生的错误 */
-  error: Error
-};
-
-/**
  * @desc 表明指定的类为feignClient类.
  *
  *      仅支持service返回格式为 application/json或application/x-www-form-urlencoded; 其他格式返回字节流
@@ -276,7 +266,7 @@ export function RequestParam(cfg: {
 /**
  * @desc RestObject参数类型.
  */
-export type RestObjectType = {
+export type RestObjectType<T = any> = {
   /** request对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
   request: fetch.Request|Rest.RestRequest;
   /** response对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
@@ -286,8 +276,41 @@ export type RestObjectType = {
   /** 处理过程中发生的错误 */
   error: Error;
   /** web 上下文对象; 如koa.Context等 */
-  ctx: any;
+  ctx: T;
 };
+
+/**
+ * @desc RestObject参数类型. 用于FeignClient.
+ */
+export type RestObjectTypeFeign<T = any> = {
+  /** request对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  request: fetch.Request;
+  /** response对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  response: fetch.Response;
+  /** 已经从response对象中读取的消息 */
+  responseMsg: any;
+  /** 处理过程中发生的错误 */
+  error: Error;
+  /** web 上下文对象; 如koa.Context等 */
+  ctx: T;
+};
+
+/**
+ * @desc RestObject参数类型. 用于FeignClient.
+ */
+export type RestObjectTypeRest<T = any> = {
+  /** request对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  request: Rest.RestRequest;
+  /** response对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  response: Rest.RestResponse;
+  /** 已经从response对象中读取的消息 */
+  responseMsg: any;
+  /** 处理过程中发生的错误 */
+  error: Error;
+  /** web 上下文对象; 如koa.Context等 */
+  ctx: T;
+};
+
 
 /**
  * @desc 用于映射请求中的Rest对象, 可以对Request,Response等内容做特殊处理.

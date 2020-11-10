@@ -192,43 +192,51 @@ export async function CallRestControllerRoute(
 
       let matchInfo = { match: true, requestError: null as Error, responseError: null as Error };
       let ret;
-      ret = await router.target[router.functionPropertyKey]({
-        pathname: pathname,
-        querystring,
-        request,
-        response,
-        params: router.params,
-        pathVars: router.pathVars,
-      }, matchInfo, ctx);
-
+      try {
+        ret = await router.target[router.functionPropertyKey]({
+          pathname: pathname,
+          querystring,
+          request,
+          response,
+          params: router.params,
+          pathVars: router.pathVars,
+        }, matchInfo, ctx);
+      }
+      catch (err) {
+        matchInfo.responseError = err;
+      }
+      
       // requestError.
       if (matchInfo.requestError) {
+        response.status = 400;
         interval = Date.now() - interval;
         logRest(request, { err: '[Error] request error' } as any, interval);
         if (cfg.errorRequestCallback) {
           cfg.errorRequestCallback(matchInfo.requestError, request, response);
         }
-        return Promise.resolve(null);
+        return Promise.resolve(response);
       }
 
       // responseError.
       if (matchInfo.responseError) {
+        response.status = 500;
         interval = Date.now() - interval;
         logRest(request, { err: '[Error] response error' } as any, interval);
         if (cfg.errorResponseCallback) {
           cfg.errorResponseCallback(matchInfo.responseError, request, response);
         }
-        return Promise.resolve(null);
+        return Promise.resolve(response);
       }
 
       // 404.
       if (!matchInfo.match) {
         interval = Date.now() - interval;
         logRest(request, { err: '[404] Route matched, but condition not satisfied' } as any, interval);
+        response.status = 404;
         if (cfg.notFoundCallback) {
           cfg.notFoundCallback(request, response);
         }
-        return Promise.resolve(null);
+        return Promise.resolve(response);
       }
 
       if (!response.body) {
@@ -247,13 +255,13 @@ export async function CallRestControllerRoute(
   interval = Date.now() - interval;
   logRest(request, { err: '[404] No match Router' } as any, interval);
 
+  // response.
+  let response = {
+    headers: {} as any,
+    status: 404,
+    body: null as any
+  }
   if (cfg.notFoundCallback) {
-    // response.
-    let response = {
-      headers: {} as any,
-      status: 200,
-      body: null as any
-    }
     // save headers.
     const defaultHeaders = febs.utils.mergeMap(cfg.headers);
     if (defaultHeaders) {
@@ -264,7 +272,7 @@ export async function CallRestControllerRoute(
     
     cfg.notFoundCallback(request, response);
   }
-  return Promise.resolve(null);
+  return Promise.resolve(response);
 }
 
 /**
