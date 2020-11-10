@@ -277,10 +277,10 @@ export function RequestParam(cfg: {
  * @desc RestObject参数类型.
  */
 export type RestObjectType = {
-  /** request对象 */
-  request: fetch.Request;
-  /** response对象 */
-  response: fetch.Response;
+  /** request对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  request: fetch.Request|Rest.RestRequest;
+  /** response对象; 如果在feignClient中使用类型为{fetch.Request}, 在RestController中使用类型为{Rest.RestRequest} */
+  response: fetch.Response|Rest.RestResponse;
   /** 已经从response对象中读取的消息 */
   responseMsg: any;
   /** 处理过程中发生的错误 */

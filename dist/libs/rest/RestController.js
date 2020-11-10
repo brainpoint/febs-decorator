@@ -144,10 +144,12 @@ function CallRestControllerRoute(request, ctx) {
                     }
                     return Promise.resolve(null);
                 }
-                if (cfg.filterMessageCallback) {
-                    ret = cfg.filterMessageCallback(ret, request.url);
+                if (!response.body) {
+                    if (cfg.filterMessageCallback) {
+                        ret = cfg.filterMessageCallback(ret, request.url);
+                    }
+                    response.body = ret;
                 }
-                response.body = ret;
                 interval = Date.now() - interval;
                 logger_1.logRest(request, response, interval);
                 return Promise.resolve(response);

@@ -25,7 +25,11 @@ class BaseService {
    * 处理 /api 路由.
    */
   @RequestMapping({ path: '/api', method: RequestMethod.GET, dataType:BeanDemo })
-  request(): Promise<BeanDemo> {
+  request(@RestObject obj:RestObjectType): Promise<BeanDemo> {
+
+    // 如果设置了obj.response.body, 则不会使用返回对象作为body值响应给调用方.
+    obj.response.body = {hello:1};
+
     return Promise.resolve(new BeanDemo());
   }
 }

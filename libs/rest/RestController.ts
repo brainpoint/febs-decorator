@@ -231,10 +231,12 @@ export async function CallRestControllerRoute(
         return Promise.resolve(null);
       }
 
-      if (cfg.filterMessageCallback) {
-        ret = cfg.filterMessageCallback(ret, request.url);
+      if (!response.body) {
+        if (cfg.filterMessageCallback) {
+          ret = cfg.filterMessageCallback(ret, request.url);
+        }
+        response.body = ret;
       }
-      response.body = ret;
 
       interval = Date.now() - interval;
       logRest(request, response, interval);

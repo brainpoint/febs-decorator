@@ -10,6 +10,7 @@
 import 'reflect-metadata'
 import * as febs from 'febs-browser';
 import * as Fetch from '@/types/fetch';
+import * as Rest from '@/types/rest_request';
 import { _RequestMappingPushParams } from './RequestMapping';
 
 const _RestObjectMetadataKey = Symbol('_RestObjectMetadataKey');
@@ -21,9 +22,9 @@ type _RestObjectMetadataType = { parameterIndex: number };
  */
 export type RestObjectType = {
   /** request对象 */
-  request: Fetch.Request;
+  request: Fetch.Request|Rest.RestRequest;
   /** response对象 */
-  response: Fetch.Response;
+  response: Fetch.Response|Rest.RestResponse;
   /** 已经从response对象中读取的消息 */
   responseMsg: any;
   /** 处理过程中发生的错误 */
