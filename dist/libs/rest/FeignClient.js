@@ -110,6 +110,8 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
                 }
             }
             catch (e) {
+                lastError = e;
+                logger_1.logError(e);
                 continue;
             }
             excludeHost = `${host.ip}:${host.port}`;
@@ -169,7 +171,7 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
                 catch (e) {
                     logger_1.logFeignClient(request, { err: e }, 0);
                     lastError = e;
-                    console.error(e);
+                    logger_1.logError(e);
                     continue;
                 }
                 try {

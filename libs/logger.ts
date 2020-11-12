@@ -77,6 +77,11 @@ function getErrorMessage(e: any) {
   return e;
 }
 
+export function logError(e: any) {
+  const logger: Logger = (global as any)[FEBS_DECORATOR_LOGGER_INSTANCE] || DefaultLogger;
+  logger.info('[Error] ' + getErrorMessage(e));
+}
+
 export function logRest(
   request: {
     method: string,

@@ -11,7 +11,7 @@ import 'reflect-metadata'
 import * as path from 'path'
 import * as febs from 'febs-browser'
 import { Fetch } from '@/types/fetch'
-import { logFeignClient, RestLogLevel, setFeignLoggerLevel } from '../logger'
+import { logError, logFeignClient, RestLogLevel, setFeignLoggerLevel } from '../logger'
 var qs = require('../utils/qs/dist')
 
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg')
@@ -223,6 +223,8 @@ export async function _FeignClientDo(
         continue;
       }
     } catch (e) {
+      lastError = e;
+      logError(e);
       continue;
     }
     
@@ -286,7 +288,7 @@ export async function _FeignClientDo(
       } catch (e) {
         logFeignClient(request, {err:e} as any, 0);
         lastError = e;
-        console.error(e);
+        logError(e);
         continue;
       }
 

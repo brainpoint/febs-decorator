@@ -1,6 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logFeignClient = exports.logRest = exports.setRestLoggerLevel = exports.setFeignLoggerLevel = exports.setLogger = exports.RestLogLevel = exports.LOG_TAG = void 0;
+exports.logFeignClient = exports.logRest = exports.logError = exports.setRestLoggerLevel = exports.setFeignLoggerLevel = exports.setLogger = exports.RestLogLevel = exports.LOG_TAG = void 0;
 const febs = require("febs-browser");
 const FEBS_DECORATOR_LOGGER_INSTANCE = Symbol('FEBS_DECORATOR_LOGGER_INSTANCE');
 const FEBS_DECORATOR_LOG_LEVEL = Symbol('FEBS_DECORATOR_LOG_LEVEL');
@@ -47,6 +47,11 @@ function getErrorMessage(e) {
     }
     return e;
 }
+function logError(e) {
+    const logger = global[FEBS_DECORATOR_LOGGER_INSTANCE] || DefaultLogger;
+    logger.info('[Error] ' + getErrorMessage(e));
+}
+exports.logError = logError;
 function logRest(request, response, interval) {
     const logger = global[FEBS_DECORATOR_LOGGER_INSTANCE] || DefaultLogger;
     const logLevel = global[FEBS_DECORATOR_LOG_LEVEL] || RestLogLevel.BASIC;
