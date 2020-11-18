@@ -11,9 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports._FeignClientDo = exports.FeignClient = exports.getFeignClientDefaultCfg = exports.setFeignClientDefaultCfg = exports._FeignClientMetadataKey = void 0;
 require("reflect-metadata");
-const path = require("path");
 const febs = require("febs-browser");
 const logger_1 = require("../logger");
+const urlUtils_1 = require("../utils/urlUtils");
 var qs = require('../utils/qs/dist');
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg');
 exports._FeignClientMetadataKey = Symbol('_FeignClientMetadataKey');
@@ -90,7 +90,7 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
             url = meta.url;
         }
         else {
-            url = path.join(meta.path, requestMapping.path[0]);
+            url = urlUtils_1.default.join(meta.path, requestMapping.path[0]);
         }
         let feignClientCfg = getFeignClientDefaultCfg();
         if (typeof feignClientCfg.findServiceCallback !== 'function') {
@@ -115,8 +115,8 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
                 continue;
             }
             excludeHost = `${host.ip}:${host.port}`;
-            let uriPathname = febs.string.isEmpty(meta.url) ? path.join(meta.path, url) : meta.url;
-            let uri = febs.string.isEmpty(meta.url) ? path.join(excludeHost, uriPathname) : uriPathname;
+            let uriPathname = febs.string.isEmpty(meta.url) ? urlUtils_1.default.join(meta.path, url) : meta.url;
+            let uri = febs.string.isEmpty(meta.url) ? urlUtils_1.default.join(excludeHost, uriPathname) : uriPathname;
             if (host.port == 443) {
                 if (uri[0] == '/')
                     uri = 'https:/' + uri;

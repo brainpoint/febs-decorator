@@ -13,6 +13,7 @@ import * as febs from 'febs-browser'
 import { RestRequest, RestResponse } from '@/types/rest_request';
 import { getServiceInstances, Service } from '../Service';
 import { logRest, RestLogLevel, setRestLoggerLevel } from '../logger';
+import urlUtils from '../utils/urlUtils';
 var qs = require('../utils/qs/dist')
 
 const DefaultRestControllerCfg = Symbol('DefaultRestControllerCfg')
@@ -130,7 +131,7 @@ export function RestController(cfg?: {
       let globalRouters = getRestControllerRouters();
       for (let p in routers) {
         let val = routers[p];
-        let pp = path.join(cfg.path, val.path);
+        let pp = urlUtils.join(cfg.path, val.path);
         let reg = getPathReg(pp, val.params);
         val.reg = reg.reg;
         val.pathVars = reg.pathVars;
@@ -231,7 +232,7 @@ export async function CallRestControllerRoute(
       // 404.
       if (!matchInfo.match) {
         interval = Date.now() - interval;
-        logRest(request, { err: '[404] Route matched, but condition not satisfied' } as any, interval);
+        logRest(request, { err: '[404] Route matched, but condition not satisfied: ' + request.url } as any, interval);
         response.status = 404;
         if (cfg.notFoundCallback) {
           cfg.notFoundCallback(request, response);
@@ -253,7 +254,7 @@ export async function CallRestControllerRoute(
   } // for.
 
   interval = Date.now() - interval;
-  logRest(request, { err: '[404] No match Router' } as any, interval);
+  logRest(request, { err: '[404] Route is not match: ' + pathname } as any, interval);
 
   // response.
   let response = {

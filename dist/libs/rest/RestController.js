@@ -11,10 +11,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports._RestControllerPushRouter = exports._RestControllerDo = exports.CallRestControllerRoute = exports.RestController = exports.setRestControllerDefaultCfg = exports._RestControllerMetadataKey = void 0;
 require("reflect-metadata");
-const path = require("path");
 const febs = require("febs-browser");
 const Service_1 = require("../Service");
 const logger_1 = require("../logger");
+const urlUtils_1 = require("../utils/urlUtils");
 var qs = require('../utils/qs/dist');
 const DefaultRestControllerCfg = Symbol('DefaultRestControllerCfg');
 const RestControllerRouters = Symbol('RestControllerRouters');
@@ -72,7 +72,7 @@ function RestController(cfg) {
             let globalRouters = getRestControllerRouters();
             for (let p in routers) {
                 let val = routers[p];
-                let pp = path.join(cfg.path, val.path);
+                let pp = urlUtils_1.default.join(cfg.path, val.path);
                 let reg = getPathReg(pp, val.params);
                 val.reg = reg.reg;
                 val.pathVars = reg.pathVars;
@@ -145,7 +145,7 @@ function CallRestControllerRoute(request, ctx) {
                 }
                 if (!matchInfo.match) {
                     interval = Date.now() - interval;
-                    logger_1.logRest(request, { err: '[404] Route matched, but condition not satisfied' }, interval);
+                    logger_1.logRest(request, { err: '[404] Route matched, but condition not satisfied: ' + request.url }, interval);
                     response.status = 404;
                     if (cfg.notFoundCallback) {
                         cfg.notFoundCallback(request, response);
@@ -164,7 +164,7 @@ function CallRestControllerRoute(request, ctx) {
             }
         }
         interval = Date.now() - interval;
-        logger_1.logRest(request, { err: '[404] No match Router' }, interval);
+        logger_1.logRest(request, { err: '[404] Route is not match: ' + pathname }, interval);
         let response = {
             headers: {},
             status: 404,

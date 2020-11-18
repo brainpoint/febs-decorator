@@ -5,3 +5,10 @@ export * from './rest.d';
 export * from './rest_request.d';
 export * from './service.d';
 export * from './validation.d';
+
+declare namespace urlUtils {
+  /**
+  * @desc: 连接url地址.
+  */
+  function join(...args: string[]): string;
+}

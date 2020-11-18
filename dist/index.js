@@ -14,4 +14,5 @@ __exportStar(require("./libs/Service"), exports);
 __exportStar(require("./libs/Autowired"), exports);
 __exportStar(require("./libs/validator"), exports);
 __exportStar(require("./libs/rest"), exports);
+exports.urlUtils = require("./libs/utils/urlUtils");
 //# sourceMappingURL=index.js.map

@@ -12,6 +12,7 @@ import * as path from 'path'
 import * as febs from 'febs-browser'
 import { Fetch } from '@/types/fetch'
 import { logError, logFeignClient, RestLogLevel, setFeignLoggerLevel } from '../logger'
+import urlUtils from '../utils/urlUtils'
 var qs = require('../utils/qs/dist')
 
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg')
@@ -200,7 +201,7 @@ export async function _FeignClientDo(
   if (!febs.string.isEmpty(meta.url)) {
     url = meta.url
   } else {
-    url = path.join(meta.path, requestMapping.path[0])
+    url = urlUtils.join(meta.path, requestMapping.path[0])
   }
 
   let feignClientCfg = getFeignClientDefaultCfg();
@@ -229,8 +230,9 @@ export async function _FeignClientDo(
     }
     
     excludeHost = `${host.ip}:${host.port}`;
-    let uriPathname = febs.string.isEmpty(meta.url) ? path.join(meta.path, url) : meta.url;
-    let uri = febs.string.isEmpty(meta.url) ? path.join(excludeHost, uriPathname) : uriPathname;
+    let uriPathname = febs.string.isEmpty(meta.url) ? urlUtils.join(meta.path, url) : meta.url;
+    let uri = febs.string.isEmpty(meta.url) ? urlUtils.join(excludeHost, uriPathname) : uriPathname;
+
     if (host.port == 443) {
       if (uri[0] == '/') uri = 'https:/' + uri;
       else uri = 'https://' + uri;
