@@ -10,7 +10,7 @@
 import 'reflect-metadata'
 import * as path from 'path'
 import * as febs from 'febs-browser'
-import { Fetch } from '@/types/fetch'
+import { Fetch } from 'febs-browser/types/fetch.d'
 import { logError, logFeignClient, RestLogLevel, setFeignLoggerLevel } from '../logger'
 import urlUtils from '../utils/urlUtils'
 var qs = require('../utils/qs/dist')

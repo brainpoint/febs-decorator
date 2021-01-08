@@ -9,7 +9,7 @@
 
 import 'reflect-metadata'
 import * as febs from 'febs-browser';
-import * as Fetch from '@/types/fetch';
+import * as Fetch from 'febs-browser/types/fetch';
 import * as Rest from '@/types/rest_request';
 import { _RequestMappingPushParams } from './RequestMapping';
 

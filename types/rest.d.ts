@@ -2,10 +2,9 @@
 
 /// <reference types="node" />
 
-import * as fetch from './fetch.d';
 import { RestLogLevel } from './logger';
 import * as Rest from './rest_request.d';
-
+import * as fetch from 'febs-browser/types/fetch.d';
 
 /**
  * @desc 表明指定的类为feignClient类.
