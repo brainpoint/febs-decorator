@@ -21,6 +21,10 @@ export function Service(singletonKey?: boolean): ClassDecorator;
 /**
  * @desc 表明指定的属性可以自动装载指定的Service实例.
  * 
+ * @example
+ *  ﹫Autowired(ClassA)
+ *  obj: ClassA;  // will to auto create object.
+ * 
  * @returns {PropertyDecorator}
  */
 export function Autowired(type: Function): PropertyDecorator;

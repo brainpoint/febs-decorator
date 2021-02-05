@@ -14,6 +14,10 @@ import { AutowiredInstances, getServiceInstances } from './Service';
 /**
  * @desc 表明指定的属性可以自动装载指定的Service实例.
  * 
+ * @example
+ *  ﹫Autowired(ClassA)
+ *  obj: ClassA;  // will to auto create object.
+ * 
  * @returns {PropertyDecorator}
  */
 
