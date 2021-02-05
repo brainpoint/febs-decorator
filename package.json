@@ -1,7 +1,7 @@
 {
   "description": "Some typescript decorator which use in front-end and back-end",
   "dependencies": {
-    "febs-browser": "^1.0.15",
+    "febs-browser": "^1.2.1",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
@@ -57,5 +57,5 @@
     }
   ],
   "name": "febs-decorator",
-  "version": "0.2.10"
+  "version": "0.2.11"
 }
