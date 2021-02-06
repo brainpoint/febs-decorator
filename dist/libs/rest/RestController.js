@@ -97,6 +97,7 @@ function CallRestControllerRoute(request, ctx) {
         if (qsPos >= 0) {
             querystring = pathname.substr(qsPos + 1);
             if (!febs.string.isEmpty(querystring)) {
+                querystring = decodeURIComponent(querystring);
                 querystring = qs.parse(querystring);
             }
             pathname = pathname.substr(0, qsPos);
@@ -114,7 +115,7 @@ function CallRestControllerRoute(request, ctx) {
                 let ret;
                 try {
                     ret = yield router.target[router.functionPropertyKey]({
-                        pathname: pathname,
+                        pathname: decodeURIComponent(pathname),
                         querystring,
                         request,
                         response,
@@ -165,7 +166,7 @@ function CallRestControllerRoute(request, ctx) {
         }
         interval = Date.now() - interval;
         logger_1.logRest(request, { err: '[404] Route is not match: ' + pathname }, interval);
-        let response = {
+        let response1 = {
             headers: {},
             status: 404,
             body: null
@@ -174,12 +175,12 @@ function CallRestControllerRoute(request, ctx) {
             const defaultHeaders = febs.utils.mergeMap(cfg.headers);
             if (defaultHeaders) {
                 for (const key in defaultHeaders) {
-                    response.headers[key] = defaultHeaders[key];
+                    response1.headers[key] = defaultHeaders[key];
                 }
             }
-            cfg.notFoundCallback(request, response);
+            cfg.notFoundCallback(request, response1);
         }
-        return Promise.resolve(response);
+        return Promise.resolve(response1);
     });
 }
 exports.CallRestControllerRoute = CallRestControllerRoute;
@@ -227,7 +228,7 @@ function _RestControllerDo(target, ctx, matchInfo, headers, dataType, args, path
                             data = request.body;
                         }
                         else if (data instanceof Number) {
-                            data = new Number(request.body).valueOf();
+                            data = Number(request.body);
                         }
                         else if (data instanceof Boolean) {
                             data = (request.body === 'true' || request.body === '1' || request.body === true || request.body === 1);
@@ -293,18 +294,20 @@ function getPathReg(p, params) {
     p = febs.string.replace(p, '-', '\-');
     let pathVars = {};
     let segs = p.split('/');
-    p = '^\/';
+    p = '';
     let pvHadRequired = true;
     for (let i = 0; i < segs.length; i++) {
         if (segs[i].length == 0)
             continue;
+        p += '(\\/';
         if (/^\{[a-zA-Z\$_][a-zA-Z\d_]*\}$/.test(segs[i])) {
-            p += '\/((?!.*\/).*)';
-            for (let j = 0; j < params.length; j++) {
+            p += "[\\w\\~\\!\\*\\(\\)\\-\\_\\'\\.\\%\\@\\$\\&\\+\\=\\[\\]\\;\\:\\,]+" + ")";
+            let j;
+            for (j = 0; j < params.length; j++) {
                 if (params[j].type == 'pv' && '{' + params[j].name + '}' == segs[i]) {
                     if (!params[j].required) {
                         pvHadRequired = false;
-                        p = '(' + p + ')?';
+                        p += '?';
                     }
                     else if (!pvHadRequired) {
                         throw new Error(`@PathVariable '${params[j].name}': required cannot be 'true', pre-pathVariable required=false`);
@@ -315,12 +318,10 @@ function getPathReg(p, params) {
             pathVars[segs[i]] = i;
         }
         else {
-            if (p.length > 2)
-                p += '\/';
-            p += segs[i];
+            p += segs[i] + ')';
         }
     }
-    p += '\/?(\\?.*)?$';
+    p = '^' + p + '\\/?(\\?.*)?$';
     return { reg: new RegExp(p), pathVars };
 }
 function _RestControllerPushRouter(targetObject, target, cfg) {

@@ -8,7 +8,6 @@
  */
 
 import 'reflect-metadata'
-import * as path from 'path'
 import * as febs from 'febs-browser'
 import { RestRequest, RestResponse } from '@/types/rest_request';
 import { getServiceInstances, Service } from '../Service';
@@ -21,6 +20,7 @@ const RestControllerRouters = Symbol('RestControllerRouters')
 
 const _RestControllerRouterMetadataKey = Symbol('_RestControllerRouterMetadataKey')
 export const _RestControllerMetadataKey = Symbol('_RestControllerMetadataKey')
+
 
 type _RestControllerRouterType = {
   target: any,
@@ -174,6 +174,7 @@ export async function CallRestControllerRoute(
   if (qsPos >= 0) {
     querystring = pathname.substr(qsPos + 1);
     if (!febs.string.isEmpty(querystring)) {
+      querystring = decodeURIComponent(querystring);
       querystring = qs.parse(querystring);
     }
     pathname = pathname.substr(0, qsPos);
@@ -195,7 +196,7 @@ export async function CallRestControllerRoute(
       let ret;
       try {
         ret = await router.target[router.functionPropertyKey]({
-          pathname: pathname,
+          pathname: decodeURIComponent(pathname),
           querystring,
           request,
           response,
@@ -257,7 +258,7 @@ export async function CallRestControllerRoute(
   logRest(request, { err: '[404] Route is not match: ' + pathname } as any, interval);
 
   // response.
-  let response = {
+  let response1 = {
     headers: {} as any,
     status: 404,
     body: null as any
@@ -267,13 +268,13 @@ export async function CallRestControllerRoute(
     const defaultHeaders = febs.utils.mergeMap(cfg.headers);
     if (defaultHeaders) {
       for (const key in defaultHeaders) {
-        response.headers[key] = defaultHeaders[key];
+        response1.headers[key] = defaultHeaders[key];
       }
     }
     
-    cfg.notFoundCallback(request, response);
+    cfg.notFoundCallback(request, response1);
   }
-  return Promise.resolve(response);
+  return Promise.resolve(response1);
 }
 
 /**
@@ -348,7 +349,7 @@ export function _RestControllerDo(
               data = request.body;
             }
             else if (data instanceof Number) {
-              data = new Number(request.body).valueOf();
+              data = Number(request.body);
             }
             else if (data instanceof Boolean) {
               data = (request.body === 'true' || request.body === '1' || request.body === true || request.body === 1);
@@ -425,19 +426,25 @@ function getPathReg(p: string, params: {
   p = febs.string.replace(p, '-', '\-');
   let pathVars = {} as any;
   let segs = p.split('/');
-  p = '^\/';
+
+  p = '';
 
   let pvHadRequired = true;
   for (let i = 0; i < segs.length; i++) {
     if (segs[i].length == 0) continue;
+
+    p += '(\\/';
+
     if (/^\{[a-zA-Z\$_][a-zA-Z\d_]*\}$/.test(segs[i])) {
-      p += '\/((?!.*\/).*)';
+      p += "[\\w\\~\\!\\*\\(\\)\\-\\_\\'\\.\\%\\@\\$\\&\\+\\=\\[\\]\\;\\:\\,]+" + ")";
+
       // required.
-      for (let j = 0; j < params.length; j++) {
+      let j;
+      for (j = 0; j < params.length; j++) {
         if (params[j].type == 'pv' && '{' + params[j].name + '}' == segs[i]) {
           if (!params[j].required) {
             pvHadRequired = false;
-            p = '(' + p + ')?';
+            p += '?';
           }
           else if (!pvHadRequired) {
             throw new Error(`@PathVariable '${params[j].name}': required cannot be 'true', pre-pathVariable required=false`);
@@ -448,11 +455,10 @@ function getPathReg(p: string, params: {
       pathVars[segs[i]] = i;
     }
     else {
-      if (p.length > 2) p += '\/';
-      p += segs[i];
+      p += segs[i] + ')';
     }
   }
-  p += '\/?(\\?.*)?$'
+  p = '^' + p + '\\/?(\\?.*)?$';
   return { reg: new RegExp(p), pathVars };
 }
 

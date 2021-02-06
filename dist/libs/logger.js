@@ -90,7 +90,7 @@ function logFeignClient(request, response, interval) {
 }
 exports.logFeignClient = logFeignClient;
 function logBasic(prefix, ip, request, response, interval, cb) {
-    let msg = prefix + '\n' + `[${ip}] ---> ${request.method} ${request.url} HTTP/1.1\n`;
+    let msg = prefix + '\n' + `[${ip}] ---> ${request.method} ${decodeURIComponent(request.url)} HTTP/1.1\n`;
     if (cb) {
         msg = cb(msg);
     }

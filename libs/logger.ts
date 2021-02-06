@@ -157,7 +157,7 @@ export function logFeignClient(
 }
 
 function logBasic(prefix:string, ip:string, request:any, response:any, interval:number, cb: (msg:string) => string):string {
-  let msg = prefix + '\n' +  `[${ip}] ---> ${request.method} ${request.url} HTTP/1.1\n`;
+  let msg = prefix + '\n' +  `[${ip}] ---> ${request.method} ${decodeURIComponent(request.url)} HTTP/1.1\n`;
   if (cb) {
     msg = cb(msg);
   }
