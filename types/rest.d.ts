@@ -106,6 +106,8 @@ export function PathVariable(cfg: {
   name: string,
   /** 是否是必须存在的参数 */
   required?: boolean,
+  /** RestController中可以指定参数的类型: String, Number, Boolean ... */
+  castType?: any,
 }): ParameterDecorator;
 
 /**
@@ -124,8 +126,10 @@ export function RequestBody(target: Object, propertyKey: string | symbol, parame
 export function RequestBody(cfg: {
   /** 是否是必须存在; */
   required?: boolean,
-  /** (用于request) 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
-  stringifyCallback?: (bodyData:any)=>string,
+  /** (用于FeignClient中) 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
+  stringifyCallback?: (bodyData: any) => string,
+  /** RestController中可以指定参数的类型: String, Number, Boolean ... */
+  castType?: any,
 }): ParameterDecorator;
 
 
@@ -143,8 +147,8 @@ export function PostMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定request或response的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }): MethodDecorator;
 
 /**
@@ -161,8 +165,8 @@ export function PutMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定request或response的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }): MethodDecorator;
 
 /**
@@ -179,8 +183,8 @@ export function PatchMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定request或response的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }): MethodDecorator;
 
 /**
@@ -197,8 +201,8 @@ export function GetMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定request或response的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }): MethodDecorator;
 
 /**
@@ -215,8 +219,8 @@ export function DeleteMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定request或response的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }): MethodDecorator;
 
 /**
@@ -235,8 +239,8 @@ export function RequestMapping(cfg: {
   timeout?: number,
   mode?: string | 'no-cors' | 'cors' | 'same-origin',
   credentials?: 'include' | null,
-  /** 指定request或response的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }): MethodDecorator;
 
 /**
@@ -260,6 +264,8 @@ export function RequestParam(cfg: {
   required?: boolean,
   /** 如果参数不存在时的默认值 */
   defaultValue?: any,
+  /** RestController中可以指定参数的类型: String, Number, Boolean ... */
+  castType?: any,
 }): ParameterDecorator;
 
 /**

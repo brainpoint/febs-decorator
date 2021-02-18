@@ -7,9 +7,12 @@
 * Desc: 如果进行了代码压缩, 获取的类名参数名将是压缩后的名称.
 */
 
+var qs = require('./qs/dist')
+
 export default {
   getClassName,
   getParameterName,
+  castType,
 }
 
 /**
@@ -65,5 +68,39 @@ function getParameterName(fn:Function):string[] {
   }
   catch (e) {
     return [];
+  }
+}
+
+/**
+ * 将content转换为指定的类型
+ * @param content 
+ * @param castType String, Number等类型
+ * @param contentIsRaw content是否是原数据; 原数据需转换.
+ */
+function castType(content: any, castType: any, contentIsRaw: boolean): { data?: any, e?: Error } {
+  try {
+    let data: any;// = new castType();
+
+    if (!castType || castType.name === 'String' /*data instanceof String*/) {
+      data = content;
+    }
+    else if (castType.name === 'Number' /*data instanceof Number*/) {
+      data = Number(content);
+    }
+    else if (castType.name === 'Boolean' /*data instanceof Boolean*/) {
+      data = (content === 'true' || content === '1' || content === true || content === 1);
+    }
+    else {
+      data = new castType();
+      if (contentIsRaw) {
+        content = qs.parse(content);
+      }
+      for (const key in content) {
+        data[key] = content[key];
+      }
+    } // if..else.
+    return { data };
+  } catch (e) {
+    return { e };
   }
 }

@@ -14,7 +14,7 @@ var qs = require('../utils/qs/dist')
 
 const _RequestBodyMetadataKey = Symbol('_RequestBodyMetadataKey');
 
-type _RequestBodyMetadataType = { required: boolean, parameterIndex: number, stringifyCallback?: (bodyData:any)=>string, };
+type _RequestBodyMetadataType = { required: boolean, parameterIndex: number, castType:any, stringifyCallback?: (bodyData:any)=>string, };
 
 
 /**
@@ -34,6 +34,7 @@ export function RequestBody(target: Object, propertyKey: string | symbol, parame
 export function RequestBody(cfg: {
   /** 是否是必须存在; */
   required?: boolean,
+  castType?: any,
   /** (用于request) 对body参数字符串化处理 (默认会根据content-type进行字符串化) */
   stringifyCallback?: (bodyData: any) => string,
 }): ParameterDecorator;
@@ -57,13 +58,15 @@ export function RequestBody(...args: any[]) {
       Reflect.defineMetadata(_RequestBodyMetadataKey, {
         required: cfg.required,
         stringifyCallback: cfg.stringifyCallback,
+        castType: cfg.castType,
         parameterIndex,
       }, target, propertyKey);
 
       _RequestMappingPushParams(target, {
         required: cfg.required,
         parameterIndex,
-        type: 'rb'
+        type: 'rb',
+        castType: cfg.castType,
       });
     }
   }
@@ -86,12 +89,14 @@ export function RequestBody(...args: any[]) {
         required: false,
         stringifyCallback: null,
         parameterIndex,
+        castType: undefined,
       }, target, propertyKey);
 
       _RequestMappingPushParams(target, {
         required: false,
         parameterIndex,
-        type: 'rb'
+        type: 'rb',
+        castType: undefined,
       });
   } // if..else.
 }

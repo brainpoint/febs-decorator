@@ -13,6 +13,7 @@ import { RestRequest, RestResponse } from '@/types/rest_request';
 import { getServiceInstances, Service } from '../Service';
 import { logRest, RestLogLevel, setRestLoggerLevel } from '../logger';
 import urlUtils from '../utils/urlUtils';
+import objectUtils from '../utils/objectUtils';
 var qs = require('../utils/qs/dist')
 
 const DefaultRestControllerCfg = Symbol('DefaultRestControllerCfg')
@@ -286,7 +287,7 @@ export function _RestControllerDo(
   ctx: any,
   matchInfo: { match: boolean, requestError: Error, responseError: Error },
   headers: { [key: string]: string|string[] },
-  dataType: any,
+  castType: any,
   args: IArguments,
   pathname: string,
   querystring: any,
@@ -297,6 +298,7 @@ export function _RestControllerDo(
     required?: boolean;
     parameterIndex?: number;
     defaultValue?: any;
+    castType: any,
     type: "pv" | "rb" | "rp" | "ro";
   }[],
   pathVars?: {[name:string]:number},
@@ -323,11 +325,19 @@ export function _RestControllerDo(
         let index = pathVars['{' + param.name + '}'];
         if (!febs.utils.isNull(index)) {
           let data = pathname.split('/')[index];
-          if (data) { decodeURIComponent(data); }
+          if (data) { data = decodeURIComponent(data); }
           else if (param.required) {
             return false;
           }
-          args[param.parameterIndex] = data;
+
+          let datar = objectUtils.castType(data, param.castType, true);
+          if (datar.e) {
+            matchInfo.requestError = datar.e;
+            return false;
+          }
+          else {
+            args[param.parameterIndex] = datar.data;
+          }
         }
       }
       // requestBody.
@@ -338,33 +348,16 @@ export function _RestControllerDo(
           }
           args[param.parameterIndex] = null;
         }
-        else if (!dataType) {
-          args[param.parameterIndex] = request.body;
-        }
         else {
-          try {
-            let data = new dataType();
-
-            if (data instanceof String) {
-              data = request.body;
-            }
-            else if (data instanceof Number) {
-              data = Number(request.body);
-            }
-            else if (data instanceof Boolean) {
-              data = (request.body === 'true' || request.body === '1' || request.body === true || request.body === 1);
-            }
-            else {
-              for (const key in request.body) {
-                data[key] = request.body[key];
-              }
-            } // if..else.
-
-            args[param.parameterIndex] = data;
-          } catch (e) {
-            matchInfo.requestError = e;
+          let datar = objectUtils.castType(request.body, param.castType, false);
+          if (datar.e) {
+            matchInfo.requestError = datar.e;
+            return false;
           }
-        } 
+          else {
+            args[param.parameterIndex] = datar.data;
+          }
+        }
       }
       // requestParam.
       else if (param.type == 'rp') {
@@ -375,7 +368,16 @@ export function _RestControllerDo(
           args[param.parameterIndex] = param.defaultValue;
         }
         else {
-          args[param.parameterIndex] = querystring[param.name];
+          let data = querystring[param.name];
+
+          let datar = objectUtils.castType(request.body, data, false);
+          if (datar.e) {
+            matchInfo.requestError = datar.e;
+            return false;
+          }
+          else {
+            args[param.parameterIndex] = datar.data;
+          }
         } 
       }
       // restObject.

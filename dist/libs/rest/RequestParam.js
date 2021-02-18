@@ -17,6 +17,7 @@ function RequestParam(cfg) {
             name: cfg.name,
             required: cfg.required,
             defaultValue: cfg.defaultValue,
+            castType: cfg.castType,
             parameterIndex,
         });
         Reflect.defineMetadata(_RequestParamMetadataKey, existingParameters, target, propertyKey);
@@ -24,6 +25,7 @@ function RequestParam(cfg) {
             name: cfg.name,
             required: cfg.required,
             defaultValue: cfg.defaultValue,
+            castType: cfg.castType,
             parameterIndex,
             type: 'rp'
         });

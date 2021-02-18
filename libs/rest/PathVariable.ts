@@ -13,7 +13,7 @@ import { _RequestMappingPushParams } from './RequestMapping';
 
 const _PathVariableMetadataKey = Symbol('_PathVariableMetadataKey');
 
-type _PathVariableMetadataType = { name: string, required: boolean, parameterIndex: number };
+type _PathVariableMetadataType = { name: string, required: boolean, castType:any, parameterIndex: number };
 
 /**
  * @desc 用于映射请求路径中的参数.
@@ -31,6 +31,8 @@ export function PathVariable(cfg: {
   name: string,
   /** 是否是必须存在的参数 */
   required?: boolean,
+  /** 指定数据类型,将会对值做类型转换 */
+  castType?: any,
 }): ParameterDecorator {
   if (febs.string.isEmpty(cfg.name)) {
     throw new febs.exception(
@@ -49,7 +51,8 @@ export function PathVariable(cfg: {
     existingParameters.push({
       name: cfg.name,
       required: cfg.required,
-      parameterIndex
+      parameterIndex,
+      castType: cfg.castType
     });
     Reflect.defineMetadata(_PathVariableMetadataKey, existingParameters, target, propertyKey);
 
@@ -57,7 +60,8 @@ export function PathVariable(cfg: {
       name: cfg.name,
       required: cfg.required,
       parameterIndex,
-      type: 'pv'
+      type: 'pv',
+      castType: cfg.castType
     });
   }
 }

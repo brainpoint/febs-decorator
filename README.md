@@ -52,7 +52,7 @@ import { RestController, RequestMapping, RequestMethod } from "febs-decorator";
 
 @FeignClient({name:'serviceName'})
 export class BaseService {
-  @RequestMapping({ path: '/api', method: RequestMethod.GET, dataType: BeanDemo })
+  @RequestMapping({ path: '/api', method: RequestMethod.GET, feignCastType: BeanDemo })
   async request(): Promise<BeanDemo> {
     // fallback.
     throw new Error('Message Error');

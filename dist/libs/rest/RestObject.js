@@ -18,7 +18,8 @@ function RestObject(...args) {
         }, target, propertyKey);
         RequestMapping_1._RequestMappingPushParams(target, {
             parameterIndex,
-            type: 'ro'
+            type: 'ro',
+            castType: undefined,
         });
     }
     else {
@@ -31,7 +32,8 @@ function RestObject(...args) {
             }, target, propertyKey);
             RequestMapping_1._RequestMappingPushParams(target, {
                 parameterIndex,
-                type: 'ro'
+                type: 'ro',
+                castType: undefined,
             });
         };
     }

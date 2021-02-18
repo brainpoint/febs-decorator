@@ -14,6 +14,7 @@ require("reflect-metadata");
 const febs = require("febs-browser");
 const logger_1 = require("../logger");
 const urlUtils_1 = require("../utils/urlUtils");
+const objectUtils_1 = require("../utils/objectUtils");
 var qs = require('../utils/qs/dist');
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg');
 exports._FeignClientMetadataKey = Symbol('_FeignClientMetadataKey');
@@ -79,7 +80,7 @@ function FeignClient(cfg) {
     };
 }
 exports.FeignClient = FeignClient;
-function _FeignClientDo(target, requestMapping, restObject, dataType, args, fallback) {
+function _FeignClientDo(target, requestMapping, restObject, castType, args, fallback) {
     return __awaiter(this, void 0, void 0, function* () {
         if (requestMapping.path.length > 1) {
             throw new febs.exception("@RequestMapping in FeignClient class, 'path' must container only one url", febs.exception.ERROR, __filename, __line, __column);
@@ -178,7 +179,7 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
                     if (!r) {
                         return r;
                     }
-                    else if (!dataType) {
+                    else if (!castType) {
                         if (feignClientCfg.filterMessageCallback) {
                             let rr = {};
                             feignClientCfg.filterMessageCallback(r, rr, meta.name, uriPathname);
@@ -189,27 +190,17 @@ function _FeignClientDo(target, requestMapping, restObject, dataType, args, fall
                         }
                     }
                     else {
-                        let o = new dataType();
+                        let o = new castType();
                         if (feignClientCfg.filterMessageCallback) {
                             feignClientCfg.filterMessageCallback(r, o, meta.name, uriPathname);
                             return o;
                         }
                         else {
-                            if (o instanceof String) {
-                                o = r;
+                            let datar = objectUtils_1.default.castType(r, castType, false);
+                            if (datar.e) {
+                                throw datar.e;
                             }
-                            else if (o instanceof Number) {
-                                o = new Number(r).valueOf();
-                            }
-                            else if (o instanceof Boolean) {
-                                o = (r === 'true' || r === '1' || r === true || r === 1);
-                            }
-                            else {
-                                for (const key in r) {
-                                    const element = r[key];
-                                    o[key] = element;
-                                }
-                            }
+                            o = datar.data;
                         }
                         return o;
                     }

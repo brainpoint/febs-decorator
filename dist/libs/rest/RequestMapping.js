@@ -69,7 +69,7 @@ function RequestMapping(cfg) {
                 let ctx = arguments[2];
                 let ret;
                 try {
-                    ret = RestController_1._RestControllerDo(target, ctx, matchInfo, cfg.headers, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars);
+                    ret = RestController_1._RestControllerDo(target, ctx, matchInfo, cfg.headers, cfg.feignCastType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars);
                 }
                 catch (err) {
                     if (matchInfo) {
@@ -113,7 +113,7 @@ function RequestMapping(cfg) {
             RequestParam_1._RequestParamDo(target, propertyKey, arguments, requestMappingParam);
             let restObject = RestObject_1._RestObjectDo(target, propertyKey, arguments);
             if (isFeignClientClass) {
-                return FeignClient_1._FeignClientDo(target, requestMappingParam, restObject, cfg.dataType, arguments, () => method.apply(this, arguments));
+                return FeignClient_1._FeignClientDo(target, requestMappingParam, restObject, cfg.feignCastType, arguments, () => method.apply(this, arguments));
             }
             else {
                 return method.apply(this, arguments);

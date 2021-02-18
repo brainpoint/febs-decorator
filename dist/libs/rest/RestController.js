@@ -15,6 +15,7 @@ const febs = require("febs-browser");
 const Service_1 = require("../Service");
 const logger_1 = require("../logger");
 const urlUtils_1 = require("../utils/urlUtils");
+const objectUtils_1 = require("../utils/objectUtils");
 var qs = require('../utils/qs/dist');
 const DefaultRestControllerCfg = Symbol('DefaultRestControllerCfg');
 const RestControllerRouters = Symbol('RestControllerRouters');
@@ -184,7 +185,7 @@ function CallRestControllerRoute(request, ctx) {
     });
 }
 exports.CallRestControllerRoute = CallRestControllerRoute;
-function _RestControllerDo(target, ctx, matchInfo, headers, dataType, args, pathname, querystring, request, response, params, pathVars) {
+function _RestControllerDo(target, ctx, matchInfo, headers, castType, args, pathname, querystring, request, response, params, pathVars) {
     const defaultHeaders = febs.utils.mergeMap(getRestControllerDefaultCfg().headers, headers);
     if (defaultHeaders) {
         for (const key in defaultHeaders) {
@@ -203,12 +204,19 @@ function _RestControllerDo(target, ctx, matchInfo, headers, dataType, args, path
                 if (!febs.utils.isNull(index)) {
                     let data = pathname.split('/')[index];
                     if (data) {
-                        decodeURIComponent(data);
+                        data = decodeURIComponent(data);
                     }
                     else if (param.required) {
                         return false;
                     }
-                    args[param.parameterIndex] = data;
+                    let datar = objectUtils_1.default.castType(data, param.castType, true);
+                    if (datar.e) {
+                        matchInfo.requestError = datar.e;
+                        return false;
+                    }
+                    else {
+                        args[param.parameterIndex] = datar.data;
+                    }
                 }
             }
             else if (param.type == 'rb') {
@@ -218,30 +226,14 @@ function _RestControllerDo(target, ctx, matchInfo, headers, dataType, args, path
                     }
                     args[param.parameterIndex] = null;
                 }
-                else if (!dataType) {
-                    args[param.parameterIndex] = request.body;
-                }
                 else {
-                    try {
-                        let data = new dataType();
-                        if (data instanceof String) {
-                            data = request.body;
-                        }
-                        else if (data instanceof Number) {
-                            data = Number(request.body);
-                        }
-                        else if (data instanceof Boolean) {
-                            data = (request.body === 'true' || request.body === '1' || request.body === true || request.body === 1);
-                        }
-                        else {
-                            for (const key in request.body) {
-                                data[key] = request.body[key];
-                            }
-                        }
-                        args[param.parameterIndex] = data;
+                    let datar = objectUtils_1.default.castType(request.body, param.castType, false);
+                    if (datar.e) {
+                        matchInfo.requestError = datar.e;
+                        return false;
                     }
-                    catch (e) {
-                        matchInfo.requestError = e;
+                    else {
+                        args[param.parameterIndex] = datar.data;
                     }
                 }
             }
@@ -253,7 +245,15 @@ function _RestControllerDo(target, ctx, matchInfo, headers, dataType, args, path
                     args[param.parameterIndex] = param.defaultValue;
                 }
                 else {
-                    args[param.parameterIndex] = querystring[param.name];
+                    let data = querystring[param.name];
+                    let datar = objectUtils_1.default.castType(request.body, data, false);
+                    if (datar.e) {
+                        matchInfo.requestError = datar.e;
+                        return false;
+                    }
+                    else {
+                        args[param.parameterIndex] = datar.data;
+                    }
                 }
             }
             else if (param.type == 'ro') {

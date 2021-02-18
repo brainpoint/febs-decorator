@@ -1,8 +1,10 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+var qs = require('./qs/dist');
 exports.default = {
     getClassName,
     getParameterName,
+    castType,
 };
 function getClassName(obj) {
     if (obj && obj.constructor && obj.constructor.toString()) {
@@ -40,6 +42,33 @@ function getParameterName(fn) {
     }
     catch (e) {
         return [];
+    }
+}
+function castType(content, castType, contentIsRaw) {
+    try {
+        let data;
+        if (!castType || castType.name === 'String') {
+            data = content;
+        }
+        else if (castType.name === 'Number') {
+            data = Number(content);
+        }
+        else if (castType.name === 'Boolean') {
+            data = (content === 'true' || content === '1' || content === true || content === 1);
+        }
+        else {
+            data = new castType();
+            if (contentIsRaw) {
+                content = qs.parse(content);
+            }
+            for (const key in content) {
+                data[key] = content[key];
+            }
+        }
+        return { data };
+    }
+    catch (e) {
+        return { e };
     }
 }
 //# sourceMappingURL=objectUtils.js.map

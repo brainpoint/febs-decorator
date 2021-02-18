@@ -14,7 +14,7 @@ var queryString = require('../utils/qs/dist')
 
 const _RequestParamMetadataKey = Symbol('_RequestParamMetadataKey');
 
-type _RequestParamMetadataType = { name: string, required: boolean, defaultValue:any, parameterIndex: number };
+type _RequestParamMetadataType = { name: string, required: boolean, defaultValue:any, castType:any, parameterIndex: number };
 
 /**
  * @desc 用于映射请求中的查询参数.
@@ -35,6 +35,8 @@ export function RequestParam(cfg: {
   name: string,
   /** 是否是必须存在的参数 */
   required?: boolean,
+  /** 指定数据类型,将会对值做类型转换 */
+  castType?: any,
   /** 如果参数不存在时的默认值 */
   defaultValue?: any,
 }): ParameterDecorator {
@@ -57,6 +59,7 @@ export function RequestParam(cfg: {
       name: cfg.name,
       required: cfg.required,
       defaultValue: cfg.defaultValue,
+      castType: cfg.castType,
       parameterIndex,
     });
     Reflect.defineMetadata(_RequestParamMetadataKey, existingParameters, target, propertyKey);
@@ -65,6 +68,7 @@ export function RequestParam(cfg: {
       name: cfg.name,
       required: cfg.required,
       defaultValue: cfg.defaultValue,
+      castType: cfg.castType,
       parameterIndex,
       type: 'rp'
     });

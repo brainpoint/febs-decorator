@@ -95,7 +95,8 @@ export function RestObject(...args: any[]) {
 
     _RequestMappingPushParams(target, {
       parameterIndex,
-      type: 'ro'
+      type: 'ro',
+      castType: undefined,
     });
 
   } else {
@@ -116,7 +117,8 @@ export function RestObject(...args: any[]) {
 
       _RequestMappingPushParams(target, {
         parameterIndex,
-        type: 'ro'
+        type: 'ro',
+        castType: undefined,
       });
     }
   }

@@ -46,8 +46,8 @@ export function PostMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定response或request的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.POST));
 }
@@ -66,8 +66,8 @@ export function PutMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定response或request的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.PUT));
 }
@@ -86,8 +86,8 @@ export function PatchMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定response或request的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.PATCH));
 }
@@ -106,8 +106,8 @@ export function GetMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定response或request的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.GET));
 }
@@ -126,8 +126,8 @@ export function DeleteMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include'|null,
-  /** 指定response或request的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }) {
   return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.DELETE));
 }
@@ -148,8 +148,8 @@ export function RequestMapping(cfg: {
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
   credentials?: 'include' | null,
-  /** 指定response或request的数据类型 */
-  dataType?: any,
+  /** 指定feignClient response的数据类型 */
+  feignCastType?: any,
 }): MethodDecorator {
 
   let cpath = Array.isArray(cfg.path) ? cfg.path : [cfg.path];
@@ -205,6 +205,7 @@ export function RequestMapping(cfg: {
             parameterIndex?: number;
             defaultValue?: any;
             type: "pv" | "rb" | "rp" | "ro";
+            castType: any,
           }[],
           pathVars?: { [name: string]: number },
         } = arguments[0];
@@ -212,7 +213,7 @@ export function RequestMapping(cfg: {
         let ctx: any = arguments[2];
         let ret: boolean;
         try {
-          ret = _RestControllerDo(target, ctx, matchInfo, cfg.headers, cfg.dataType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars);
+          ret = _RestControllerDo(target, ctx, matchInfo, cfg.headers, cfg.feignCastType, arguments, cfgp.pathname, cfgp.querystring, cfgp.request, cfgp.response, cfgp.params, cfgp.pathVars);
         } catch (err) {
           if (matchInfo) {
             matchInfo.requestError = err;
@@ -279,7 +280,7 @@ export function RequestMapping(cfg: {
       // feignClient.
       //
       if (isFeignClientClass) {
-        return _FeignClientDo(target, requestMappingParam, restObject, cfg.dataType, arguments, () => method.apply(this, arguments));
+        return _FeignClientDo(target, requestMappingParam, restObject, cfg.feignCastType, arguments, () => method.apply(this, arguments));
       } else {
         return method.apply(this, arguments);
       }
@@ -377,6 +378,7 @@ export function _RequestMappingPushParams(target: Object, cfg: {
   name?: string,
   required?: boolean,
   parameterIndex?: number,
+  castType: any,
   defaultValue?: any,
   type: 'pv'|'rb'|'rp'|'ro'
 }): void {
@@ -385,6 +387,7 @@ export function _RequestMappingPushParams(target: Object, cfg: {
     name?: string,
     required?: boolean,
     parameterIndex?: number,
+    castType: any,
     defaultValue?: any,
     type: 'pv' | 'rb' | 'rp' | 'ro'
   }[] = Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target) || [];

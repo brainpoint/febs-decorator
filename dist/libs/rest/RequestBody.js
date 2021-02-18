@@ -17,12 +17,14 @@ function RequestBody(...args) {
             Reflect.defineMetadata(_RequestBodyMetadataKey, {
                 required: cfg.required,
                 stringifyCallback: cfg.stringifyCallback,
+                castType: cfg.castType,
                 parameterIndex,
             }, target, propertyKey);
             RequestMapping_1._RequestMappingPushParams(target, {
                 required: cfg.required,
                 parameterIndex,
-                type: 'rb'
+                type: 'rb',
+                castType: cfg.castType,
             });
         };
     }
@@ -37,11 +39,13 @@ function RequestBody(...args) {
             required: false,
             stringifyCallback: null,
             parameterIndex,
+            castType: undefined,
         }, target, propertyKey);
         RequestMapping_1._RequestMappingPushParams(target, {
             required: false,
             parameterIndex,
-            type: 'rb'
+            type: 'rb',
+            castType: undefined,
         });
     }
 }

@@ -26,7 +26,7 @@ class BaseService {
   /**
    * 请求 base服务中的 /api接口.
    */
-  @RequestMapping({ path: '/api', method: RequestMethod.GET, dataType:BeanDemo })
+  @RequestMapping({ path: '/api', method: RequestMethod.GET, feignCastType:BeanDemo })
   async request(): Promise<BeanDemo> {
     // fallback.
     throw new Error('Message Error');
@@ -90,9 +90,9 @@ class DemoService {
 用于映射请求路径中的参数
 
 ```js
-import { FeignClient, RequestMapping, PathVariable } from "febs-decorator";
+import { RestController, RequestMapping, PathVariable } from "febs-decorator";
 
-@FeignClient({name: 'serviceName'})
+@RestController({name: 'serviceName'})
 class DemoService {
   @GetMapping({path: '/api/{param}'})
   async request( 
@@ -101,6 +101,8 @@ class DemoService {
       name: 'param',
       /** 是否是必须存在的参数 */
       required: true,
+      /** 指定参数转换后的类型 */
+      castType: String,
     }) param:string
   ) : Promise<any> {
     throw new Error('fallback deal');
@@ -182,7 +184,7 @@ await obj.request('hello');
 
 除使用 `findServiceCallback` 对接收的消息进行统一处理之外, 还可以使用如下方式进行.
 
-使用 `dataType` 参数指定返回值类型. 并结合Validation装饰器对类型做限制.
+使用 `feignCastType` 参数指定返回值类型. 并结合Validation装饰器对类型做限制.
 
 ```js
 import { AssertTrue, FeignClient, RequestMapping } from "febs-decorator";
@@ -196,7 +198,7 @@ class DemoBean {
 /** 定义feignClient */
 @FeignClient({name: 'serviceName'})
 class DemoService {
-  @RequestMapping({path: '/api', dataType: DemoBean}) // 如果无法转换远程发送来的数据为DemoBean, 将进入fallback处理.
+  @RequestMapping({path: '/api', feignCastType: DemoBean}) // 如果无法转换远程发送来的数据为DemoBean, 将进入fallback处理.
   async request() : Promise<DemoBean> {
     // fallback
     throw new Error('fallback deal');
@@ -206,13 +208,13 @@ class DemoService {
 let bean:DemoBean = await new DemoService().request();
 ```
 
-如果使用RestController, 则`dataType`将表示`RequestBody`的类型
+如果使用RestController, 无需`feignCastType`参数.
 
 ```js
 @RestController()
 class DemoService {
-  @RequestMapping({path: '/api', dataType: DemoBean}) // 如果无法转换远程发送来的数据为DemoBean, 将进入errorRequestCallback.
-  async request( @RequestBody data:DemoBean ) : Promise<any> {
+  @RequestMapping({path: '/api'}) // 如果无法转换远程发送来的数据为DemoBean, 将进入errorRequestCallback.
+  async request() : Promise<DemoBean> {
 
   }
 }
@@ -234,7 +236,7 @@ class DemoBean {
 /** 定义feignClient */
 @FeignClient({name: 'serviceName'})
 class DemoService {
-  @RequestMapping({path: '/api', dataType: DemoBean}) // 如果无法转换为DemoBean, 将进入fallback处理.
+  @RequestMapping({path: '/api', feignCastType: DemoBean}) // 如果无法转换为DemoBean, 将进入fallback处理.
   async request(@RestObject restObject: RestObjectType) : Promise<DemoBean> {
     // fallback
 

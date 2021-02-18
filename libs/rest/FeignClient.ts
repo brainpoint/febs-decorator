@@ -13,6 +13,7 @@ import * as febs from 'febs-browser'
 import { Fetch } from 'febs-browser/types/fetch.d'
 import { logError, logFeignClient, RestLogLevel, setFeignLoggerLevel } from '../logger'
 import urlUtils from '../utils/urlUtils'
+import objectUtils from '../utils/objectUtils'
 var qs = require('../utils/qs/dist')
 
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg')
@@ -178,7 +179,7 @@ export async function _FeignClientDo(
   target: Object,
   requestMapping: any,
   restObject: { parameterIndex: number },
-  dataType: any,
+  castType: any,
   args: IArguments,
   fallback: () => Promise<any>
 ):Promise<any> {
@@ -299,7 +300,7 @@ export async function _FeignClientDo(
         if (!r) {
           return r;
         }
-        else if (!dataType) {
+        else if (!castType) {
           if (feignClientCfg.filterMessageCallback) {
             let rr = {};
             feignClientCfg.filterMessageCallback(r, rr, meta.name, uriPathname);
@@ -309,27 +310,17 @@ export async function _FeignClientDo(
             return r;
           }
         } else {
-          let o = new dataType();
+          let o = new castType();
           if (feignClientCfg.filterMessageCallback) {
             feignClientCfg.filterMessageCallback(r, o, meta.name, uriPathname);
             return o;
           }
           else {
-            if (o instanceof String) {
-              o = r;
+            let datar = objectUtils.castType(r, castType, false);
+            if (datar.e) {
+              throw datar.e;
             }
-            else if (o instanceof Number) {
-              o = new Number(r).valueOf();
-            }
-            else if (o instanceof Boolean) {
-              o = (r === 'true' || r === '1' || r === true || r === 1);
-            }
-            else {
-              for (const key in r) {
-                const element = r[key];
-                o[key] = element;
-              }
-            } // if..else.
+            o = datar.data;
           }
           return o;
         }

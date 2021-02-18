@@ -16,7 +16,8 @@
   },
   "scripts": {
     "test": "tsc --build tsconfig.json && cp -rf libs/utils/qs dist/libs/utils && tap dist/test/*.js",
-    "prepublishOnly": "tsc --build tsconfig.json && cp -rf libs/utils/qs dist/libs/utils"
+    "prepublishOnly": "tsc --build tsconfig.json && cp -rf libs/utils/qs dist/libs/utils",
+    "build": "tsc --build tsconfig.json && cp -rf libs/utils/qs dist/libs/utils"
   },
   "keywords": [
     "decorator",
@@ -57,5 +58,5 @@
     }
   ],
   "name": "febs-decorator",
-  "version": "0.2.13"
+  "version": "1.0.0"
 }
