@@ -327,6 +327,7 @@ export function _RestControllerDo(
           let data = pathname.split('/')[index];
           if (data) { data = decodeURIComponent(data); }
           else if (param.required) {
+            matchInfo.requestError = new Error("parameter is required");
             return false;
           }
 
@@ -344,6 +345,7 @@ export function _RestControllerDo(
       else if (param.type == 'rb') {
         if (!request.body) {
           if (param.required) {
+            matchInfo.requestError = new Error("parameter is required");
             return false;
           }
           args[param.parameterIndex] = null;
@@ -363,6 +365,7 @@ export function _RestControllerDo(
       else if (param.type == 'rp') {
         if (!querystring || !querystring.hasOwnProperty(param.name)) {
           if (param.required && !param.defaultValue) {
+            matchInfo.requestError = new Error("parameter is required");
             return false;
           }
           args[param.parameterIndex] = param.defaultValue;

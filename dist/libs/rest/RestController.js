@@ -207,6 +207,7 @@ function _RestControllerDo(target, ctx, matchInfo, headers, castType, args, path
                         data = decodeURIComponent(data);
                     }
                     else if (param.required) {
+                        matchInfo.requestError = new Error("parameter is required");
                         return false;
                     }
                     let datar = objectUtils_1.default.castType(data, param.castType, true);
@@ -222,6 +223,7 @@ function _RestControllerDo(target, ctx, matchInfo, headers, castType, args, path
             else if (param.type == 'rb') {
                 if (!request.body) {
                     if (param.required) {
+                        matchInfo.requestError = new Error("parameter is required");
                         return false;
                     }
                     args[param.parameterIndex] = null;
@@ -240,6 +242,7 @@ function _RestControllerDo(target, ctx, matchInfo, headers, castType, args, path
             else if (param.type == 'rp') {
                 if (!querystring || !querystring.hasOwnProperty(param.name)) {
                     if (param.required && !param.defaultValue) {
+                        matchInfo.requestError = new Error("parameter is required");
                         return false;
                     }
                     args[param.parameterIndex] = param.defaultValue;
