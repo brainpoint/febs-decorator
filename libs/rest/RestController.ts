@@ -327,7 +327,7 @@ export function _RestControllerDo(
           let data = pathname.split('/')[index];
           if (data) { data = decodeURIComponent(data); }
           else if (param.required) {
-            matchInfo.requestError = new Error("parameter is required");
+            matchInfo.requestError = new febs.exception(`parameter "${param.name}" is required`, febs.exception.PARAM, __filename, __line, __column);
             return false;
           }
 
@@ -345,7 +345,7 @@ export function _RestControllerDo(
       else if (param.type == 'rb') {
         if (!request.body) {
           if (param.required) {
-            matchInfo.requestError = new Error("parameter is required");
+            matchInfo.requestError = new febs.exception(`requestBody is required`, febs.exception.PARAM, __filename, __line, __column);
             return false;
           }
           args[param.parameterIndex] = null;
@@ -365,7 +365,7 @@ export function _RestControllerDo(
       else if (param.type == 'rp') {
         if (!querystring || !querystring.hasOwnProperty(param.name)) {
           if (param.required && !param.defaultValue) {
-            matchInfo.requestError = new Error("parameter is required");
+            matchInfo.requestError = new febs.exception(`parameter "${param.name}" is required`, febs.exception.PARAM, __filename, __line, __column);
             return false;
           }
           args[param.parameterIndex] = param.defaultValue;
@@ -373,7 +373,7 @@ export function _RestControllerDo(
         else {
           let data = querystring[param.name];
 
-          let datar = objectUtils.castType(request.body, data, false);
+          let datar = objectUtils.castType(data, param.castType, false);
           if (datar.e) {
             matchInfo.requestError = datar.e;
             return false;
