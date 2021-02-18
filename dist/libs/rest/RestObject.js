@@ -16,7 +16,7 @@ function RestObject(...args) {
         Reflect.defineMetadata(_RestObjectMetadataKey, {
             parameterIndex,
         }, target, propertyKey);
-        RequestMapping_1._RequestMappingPushParams(target, {
+        RequestMapping_1._RequestMappingPushParams(target, propertyKey, {
             parameterIndex,
             type: 'ro',
             castType: undefined,
@@ -30,7 +30,7 @@ function RestObject(...args) {
             Reflect.defineMetadata(_RestObjectMetadataKey, {
                 parameterIndex,
             }, target, propertyKey);
-            RequestMapping_1._RequestMappingPushParams(target, {
+            RequestMapping_1._RequestMappingPushParams(target, propertyKey, {
                 parameterIndex,
                 type: 'ro',
                 castType: undefined,

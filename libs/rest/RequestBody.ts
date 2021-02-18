@@ -62,7 +62,7 @@ export function RequestBody(...args: any[]) {
         parameterIndex,
       }, target, propertyKey);
 
-      _RequestMappingPushParams(target, {
+      _RequestMappingPushParams(target, propertyKey, {
         required: cfg.required,
         parameterIndex,
         type: 'rb',
@@ -92,7 +92,7 @@ export function RequestBody(...args: any[]) {
         castType: undefined,
       }, target, propertyKey);
 
-      _RequestMappingPushParams(target, {
+      _RequestMappingPushParams(target, propertyKey, {
         required: false,
         parameterIndex,
         type: 'rb',

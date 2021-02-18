@@ -184,7 +184,7 @@ export function RequestMapping(cfg: {
     _RestControllerPushRouter(target, target.constructor, {
       path: cfg.path,
       functionPropertyKey: propertyKey,
-      params: _GetRequestMappingParams(target),
+      params: _GetRequestMappingParams(target, propertyKey),
       method: cfg.method,
     });
 
@@ -359,7 +359,7 @@ function setPathVariables(urlPaths: string[], pathVariables:{ [key: string]: str
 /**
  * @desc 将参数信息存储到target.
  */
-export function _GetRequestMappingParams(target: Object): {
+export function _GetRequestMappingParams(target: Object, propertyKey: string | symbol): {
     name?: string,
     required?: boolean,
     parameterIndex?: number,
@@ -367,14 +367,14 @@ export function _GetRequestMappingParams(target: Object): {
     type: 'pv' | 'rb' | 'rp' | 'ro'
 }[]
 {
-  return Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target);
+  return Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target, propertyKey);
 }
 
 
 /**
  * @desc 将参数信息存储到target.
  */
-export function _RequestMappingPushParams(target: Object, cfg: {
+export function _RequestMappingPushParams(target: Object, propertyKey: string | symbol, cfg: {
   name?: string,
   required?: boolean,
   parameterIndex?: number,
@@ -390,13 +390,14 @@ export function _RequestMappingPushParams(target: Object, cfg: {
     castType: any,
     defaultValue?: any,
     type: 'pv' | 'rb' | 'rp' | 'ro'
-  }[] = Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target) || [];
+  }[] = Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target, propertyKey) || [];
 
   routers.push(cfg);
 
   Reflect.defineMetadata(
     _RequestMappingParamsMetadataKey,
     routers,
-    target
+    target, 
+    propertyKey
   )
 }

@@ -64,7 +64,7 @@ export function RequestParam(cfg: {
     });
     Reflect.defineMetadata(_RequestParamMetadataKey, existingParameters, target, propertyKey);
 
-    _RequestMappingPushParams(target, {
+    _RequestMappingPushParams(target, propertyKey, {
       name: cfg.name,
       required: cfg.required,
       defaultValue: cfg.defaultValue,

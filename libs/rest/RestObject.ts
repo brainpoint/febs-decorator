@@ -93,7 +93,7 @@ export function RestObject(...args: any[]) {
       parameterIndex,
     }, target, propertyKey);
 
-    _RequestMappingPushParams(target, {
+    _RequestMappingPushParams(target, propertyKey, {
       parameterIndex,
       type: 'ro',
       castType: undefined,
@@ -115,7 +115,7 @@ export function RestObject(...args: any[]) {
         parameterIndex,
       }, target, propertyKey);
 
-      _RequestMappingPushParams(target, {
+      _RequestMappingPushParams(target, propertyKey, {
         parameterIndex,
         type: 'ro',
         castType: undefined,

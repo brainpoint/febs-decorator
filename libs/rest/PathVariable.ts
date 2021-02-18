@@ -56,7 +56,7 @@ export function PathVariable(cfg: {
     });
     Reflect.defineMetadata(_PathVariableMetadataKey, existingParameters, target, propertyKey);
 
-    _RequestMappingPushParams(target, {
+    _RequestMappingPushParams(target, propertyKey, {
       name: cfg.name,
       required: cfg.required,
       parameterIndex,

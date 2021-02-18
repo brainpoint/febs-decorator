@@ -57,7 +57,7 @@ function RequestMapping(cfg) {
         RestController_1._RestControllerPushRouter(target, target.constructor, {
             path: cfg.path,
             functionPropertyKey: propertyKey,
-            params: _GetRequestMappingParams(target),
+            params: _GetRequestMappingParams(target, propertyKey),
             method: cfg.method,
         });
         let method = descriptor.value;
@@ -170,14 +170,14 @@ function setPathVariables(urlPaths, pathVariables) {
     }
     return urlPaths;
 }
-function _GetRequestMappingParams(target) {
-    return Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target);
+function _GetRequestMappingParams(target, propertyKey) {
+    return Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target, propertyKey);
 }
 exports._GetRequestMappingParams = _GetRequestMappingParams;
-function _RequestMappingPushParams(target, cfg) {
-    let routers = Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target) || [];
+function _RequestMappingPushParams(target, propertyKey, cfg) {
+    let routers = Reflect.getOwnMetadata(_RequestMappingParamsMetadataKey, target, propertyKey) || [];
     routers.push(cfg);
-    Reflect.defineMetadata(_RequestMappingParamsMetadataKey, routers, target);
+    Reflect.defineMetadata(_RequestMappingParamsMetadataKey, routers, target, propertyKey);
 }
 exports._RequestMappingPushParams = _RequestMappingPushParams;
 //# sourceMappingURL=RequestMapping.js.map
