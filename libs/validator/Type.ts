@@ -502,7 +502,7 @@ function validateArray(
   if (Array.isArray(propertyValue)) {
     if (typeof decoratorData.checkCB === 'function') {
       for (let i = 0; i < propertyValue.length; i++) {
-        if (!decoratorData.checkCB(propertyValue[i], i)) {
+        if (!decoratorData.checkCB(propertyValue[i], i, propertyValue)) {
           return { isValid: false }
         }
       }
@@ -518,7 +518,7 @@ function validateArray_list(propertyValue: any, decoratorData: any): { isValid?:
   return verifyPropertyList(propertyValue, decoratorData, validateArray);
 }
 function ArrayList(cfg?: {
-  checkCB?: (elem: any, index?: number) => boolean
+  checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
   listMaxLength?: number
   message?: string
 }): PropertyDecorator
@@ -542,12 +542,12 @@ function ArrayList(...args: any[]) {
  *
  * 验证后属性值将保持原样.
  *
- * @param cfg 可以传递checkCB(elem:any, index:number)=>boolean 对每个元素的类型进行判断.
+ * @param cfg 可以传递checkCB(elem:any, index:number, allElem?: Array<any>)=>boolean 对每个元素的类型进行判断.
  *
  * @return:
  */
 function Arraya(cfg?: {
-  checkCB?: (elem: any, index?: number) => boolean
+  checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
   message?: string
 }): PropertyDecorator
 function Arraya(target: Object, propertyKey: string | symbol): void
@@ -593,7 +593,7 @@ function validateEnum_list(propertyValue: any, decoratorData: any): { isValid?: 
 function EnumList(cfg: {
   /** 要验证的枚举类型 */
   enumType: any,
-  checkCB?: (elem: any, index?: number) => boolean
+  checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
   listMaxLength?: number
   message?: string
 }): PropertyDecorator {
@@ -610,7 +610,7 @@ function EnumList(cfg: {
 function Enuma(cfg: {
   /** 要验证的枚举类型 */
   enumType: any,
-  checkCB?: (elem: any, index?: number) => boolean
+  checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
   message?: string
 }): PropertyDecorator {
   return getPropertyDecorator(validateEnum, cfg);

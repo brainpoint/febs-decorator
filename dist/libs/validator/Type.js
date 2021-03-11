@@ -258,7 +258,7 @@ function validateArray(propertyValue, decoratorData) {
     if (Array.isArray(propertyValue)) {
         if (typeof decoratorData.checkCB === 'function') {
             for (let i = 0; i < propertyValue.length; i++) {
-                if (!decoratorData.checkCB(propertyValue[i], i)) {
+                if (!decoratorData.checkCB(propertyValue[i], i, propertyValue)) {
                     return { isValid: false };
                 }
             }
