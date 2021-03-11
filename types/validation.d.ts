@@ -569,12 +569,14 @@ export namespace Type {
    * @return:
    */
   function Array(cfg?: {
+    /** 明确返回false表明数据错误 */
     checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
     message?: string
   }): PropertyDecorator
   function Array(target: Object, propertyKey: string | symbol): void
   namespace Array {
     function List(cfg?: {
+      /** 明确返回false表明数据错误 */
       checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
       listMaxLength?: number
       message?: string
@@ -592,17 +594,33 @@ export namespace Type {
   function Enum(cfg: {
     /** 要验证的枚举类型 */
     enumType: any,
-    checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
+    /** 明确返回false表明数据错误 */
+    checkCB?: (elem: any) => boolean
     message?: string
   }): PropertyDecorator
   namespace Enum {
     function List(cfg: {
       /** 要验证的枚举类型 */
       enumType: any,
-      checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
+      /** 明确返回false表明数据错误 */
+      checkCB?: (elem: any) => boolean
       listMaxLength?: number
       message?: string
     }): PropertyDecorator
   }
+
+  /**
+   * @desc: 使用具体的验证方法验证数据.
+   *
+   * @param cfg 可以传递checkCB(elem:any)=>boolean 对数据进行判断.
+   *
+   * @return:
+   */
+  function Validator(cfg: {
+    /** 明确返回false表明数据错误 */
+    checkCB: (elem: any) => boolean
+    message?: string
+  }): PropertyDecorator
+
 
 }

@@ -13,6 +13,7 @@ exports.Type = {
     Object: Objecta,
     Array: Arraya,
     Enum: Enuma,
+    Validator: Validator,
 };
 function validateBoolean(propertyValue, decoratorData) {
     if (febs.utils.isNull(propertyValue)) {
@@ -258,7 +259,7 @@ function validateArray(propertyValue, decoratorData) {
     if (Array.isArray(propertyValue)) {
         if (typeof decoratorData.checkCB === 'function') {
             for (let i = 0; i < propertyValue.length; i++) {
-                if (!decoratorData.checkCB(propertyValue[i], i, propertyValue)) {
+                if (false === decoratorData.checkCB(propertyValue[i], i, propertyValue)) {
                     return { isValid: false };
                 }
             }
@@ -295,6 +296,11 @@ function validateEnum(propertyValue, decoratorData) {
     }
     for (const key1 in decoratorData.enumType) {
         if (propertyValue === decoratorData.enumType[key1]) {
+            if (typeof decoratorData.checkCB === 'function') {
+                if (false === decoratorData.checkCB(propertyValue)) {
+                    return { isValid: false };
+                }
+            }
             return { propertyValue: propertyValue };
         }
     }
@@ -310,4 +316,16 @@ function Enuma(cfg) {
     return validatorUtils_1.getPropertyDecorator(validateEnum, cfg);
 }
 Enuma.List = EnumList;
+function validateValidator(propertyValue, decoratorData) {
+    if (typeof decoratorData.checkCB === 'function') {
+        if (false === decoratorData.checkCB(propertyValue)) {
+            return { isValid: false };
+        }
+        return { propertyValue: propertyValue };
+    }
+    return { isValid: false };
+}
+function Validator(cfg) {
+    return validatorUtils_1.getPropertyDecorator(validateValidator, cfg);
+}
 //# sourceMappingURL=Type.js.map

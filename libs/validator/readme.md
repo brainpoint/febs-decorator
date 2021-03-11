@@ -8,6 +8,7 @@
   - [时间判断](#时间判断)
 - [值枚举](#值枚举)
 - [类型限定](#类型限定)
+- [任意判断](#任意判断)
 
 ## Example
 
@@ -134,3 +135,20 @@ obj.a = 1;  // 抛出参数非法异常.
 | `@Type.Date`    | 验证参数是否为时间.      |
 | `@Type.Object`  | 验证参数是否为object.    |
 | `@Type.Array`   | 验证参数是否为数组.      |
+
+## 任意判断
+
+| 名称            | 作用                     |
+| --------------- | ------------------------ |
+| `@Type.Validator` | 验证任意参数. |
+
+
+```js
+// 验证value为1
+@Type.Validator({
+  checkCB(value:any) {
+    if (value !== 1) return false;
+  }
+})
+value: number;
+```

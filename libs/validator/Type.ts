@@ -25,6 +25,7 @@ export const Type = {
   Object: Objecta,
   Array: Arraya,
   Enum: Enuma,
+  Validator: Validator,
 }
 
 /**
@@ -502,7 +503,7 @@ function validateArray(
   if (Array.isArray(propertyValue)) {
     if (typeof decoratorData.checkCB === 'function') {
       for (let i = 0; i < propertyValue.length; i++) {
-        if (!decoratorData.checkCB(propertyValue[i], i, propertyValue)) {
+        if (false === decoratorData.checkCB(propertyValue[i], i, propertyValue)) {
           return { isValid: false }
         }
       }
@@ -580,6 +581,11 @@ function validateEnum(
 
   for (const key1 in decoratorData.enumType) {
     if (propertyValue === decoratorData.enumType[key1]) {
+      if (typeof decoratorData.checkCB === 'function') {
+        if (false === decoratorData.checkCB(propertyValue)) {
+          return { isValid: false }
+        }
+      }
       return { propertyValue: propertyValue };
     }
   }
@@ -593,7 +599,7 @@ function validateEnum_list(propertyValue: any, decoratorData: any): { isValid?: 
 function EnumList(cfg: {
   /** 要验证的枚举类型 */
   enumType: any,
-  checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
+  checkCB?: (elem: any) => boolean
   listMaxLength?: number
   message?: string
 }): PropertyDecorator {
@@ -610,9 +616,41 @@ function EnumList(cfg: {
 function Enuma(cfg: {
   /** 要验证的枚举类型 */
   enumType: any,
-  checkCB?: (elem: any, index?: number, allElem?: Array<any>) => boolean
+  checkCB?: (elem: any) => boolean
   message?: string
 }): PropertyDecorator {
   return getPropertyDecorator(validateEnum, cfg);
 }
 Enuma.List = EnumList
+
+/**
+ * @desc: Validator
+ */
+function validateValidator(
+  propertyValue: any,
+  decoratorData: any
+): { isValid?: boolean, propertyValue?: any } {
+
+  if (typeof decoratorData.checkCB === 'function') {
+    if (false === decoratorData.checkCB(propertyValue)) {
+      return { isValid: false }
+    }
+    return { propertyValue: propertyValue };
+  }
+
+  return { isValid: false }
+}
+
+/**
+ * @desc: 使用具体的验证方法验证数据.
+ *
+ * @param cfg 可以传递checkCB(elem:any)=>boolean 对数据进行判断.
+ *
+ * @return:
+ */
+function Validator(cfg: {
+  checkCB: (elem: any) => boolean
+  message?: string
+}): PropertyDecorator {
+  return getPropertyDecorator(validateValidator, cfg);
+}
