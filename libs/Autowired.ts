@@ -9,7 +9,7 @@
 
 import 'reflect-metadata'
 
-import { AutowiredInstances, getServiceInstances } from './Service';
+import { getGlobalAutowireds, getServiceInstances } from './Service';
 
 /**
  * @desc 表明指定的属性可以自动装载指定的Service实例.
@@ -21,7 +21,7 @@ import { AutowiredInstances, getServiceInstances } from './Service';
  * @returns {PropertyDecorator}
  */
 
-export function Autowired(type: Function): PropertyDecorator {
+export function Autowired(type: Function|string): PropertyDecorator {
   return (target: Object, propertyKey: string | symbol): void => {
 
     let ins = getServiceInstances(type);
@@ -29,8 +29,7 @@ export function Autowired(type: Function): PropertyDecorator {
       (target as any)[propertyKey] = ins[0];
     }
     else {
-      (global as any)[AutowiredInstances] = (global as any)[AutowiredInstances] || [];
-      (global as any)[AutowiredInstances].push({
+      getGlobalAutowireds().push({
         target,
         propertyKey,
         type

@@ -10,8 +10,7 @@ function Autowired(type) {
             target[propertyKey] = ins[0];
         }
         else {
-            global[Service_1.AutowiredInstances] = global[Service_1.AutowiredInstances] || [];
-            global[Service_1.AutowiredInstances].push({
+            Service_1.getGlobalAutowireds().push({
                 target,
                 propertyKey,
                 type

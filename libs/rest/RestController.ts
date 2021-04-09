@@ -119,7 +119,7 @@ export function RestController(cfg?: {
   cfg = cfg || {};
   cfg.path = cfg.path || ''
 
-  let fooService = Service(true);
+  let fooService = Service();
 
   return (target: Function): void => {
     fooService(target);

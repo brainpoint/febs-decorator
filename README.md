@@ -1,6 +1,12 @@
 
 Some typescript decorators, like spring-validation and so on.
 
+- [Setup](#setup)
+- [Example](#example)
+- [Reference](#reference)
+  - [Validator Decorator](#validator-decorator)
+  - [Rest Decorator](#rest-decorator)
+
 ## Setup
 
 ```
@@ -43,6 +49,24 @@ class BeanDemo {
 // get service instances.
 @Autowired(BeanDemo)
 let objArray:any[];
+```
+
+Bean Example:
+
+```js
+import {Service, Bean} from 'febs-decorator';
+
+@Service()
+class BeanDemo {
+  @Bean()
+  foo(): Object {
+    return {};
+  }
+}
+
+// get bean instances.
+@Autowired('foo')
+let obj:Object;
 ```
 
 FeignClient Example:

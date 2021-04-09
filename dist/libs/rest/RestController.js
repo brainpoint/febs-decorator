@@ -63,7 +63,7 @@ function getRestControllerDefaultCfg() {
 function RestController(cfg) {
     cfg = cfg || {};
     cfg.path = cfg.path || '';
-    let fooService = Service_1.Service(true);
+    let fooService = Service_1.Service();
     return (target) => {
         fooService(target);
         let instance = Service_1.getServiceInstances(target);
