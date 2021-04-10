@@ -6,11 +6,18 @@ const Service_1 = require("./Service");
 function Autowired(type) {
     return (target, propertyKey) => {
         let ins = Service_1.getServiceInstances(type);
-        if (ins && ins.length > 0) {
-            target[propertyKey] = ins[0];
+        if (ins) {
+            if (ins.singleton) {
+                target[propertyKey] = ins.instance;
+            }
+            else {
+                ins.callback().then(res => {
+                    target[propertyKey] = res;
+                });
+            }
         }
         else {
-            Service_1.getGlobalAutowireds().push({
+            Service_1.getGlobalWaitAutowireds().push({
                 target,
                 propertyKey,
                 type

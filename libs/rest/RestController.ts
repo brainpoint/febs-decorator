@@ -25,6 +25,7 @@ export const _RestControllerMetadataKey = Symbol('_RestControllerMetadataKey')
 
 type _RestControllerRouterType = {
   target: any,
+  serviceInstance: any,
   functionPropertyKey: string | symbol,
   params: {
     name?: string;
@@ -123,8 +124,6 @@ export function RestController(cfg?: {
 
   return (target: Function): void => {
     fooService(target);
-    let instance = getServiceInstances(target);
-    instance = instance[instance.length - 1];
       
     // store routers.
     let routers: _RestControllerRouterType[] = Reflect.getOwnMetadata(_RestControllerRouterMetadataKey, target);
@@ -136,7 +135,7 @@ export function RestController(cfg?: {
         let reg = getPathReg(pp, val.params);
         val.reg = reg.reg;
         val.pathVars = reg.pathVars;
-        val.target = instance;
+        val.target = target;
         // delete val.path;
         globalRouters.push(val);
       }
@@ -196,7 +195,16 @@ export async function CallRestControllerRoute(
       let matchInfo = { match: true, requestError: null as Error, responseError: null as Error };
       let ret;
       try {
-        ret = await router.target[router.functionPropertyKey]({
+
+        let target: any;
+        if (router.serviceInstance) {
+          target = router.serviceInstance;
+        } else {
+          target = router.serviceInstance = getServiceInstances(router.target).instance;
+          router.target = null;
+        }
+
+        ret = await target[router.functionPropertyKey]({
           pathname: decodeURIComponent(pathname),
           querystring,
           request,
@@ -488,7 +496,8 @@ export function _RestControllerPushRouter(targetObject: Object, target: Function
   if (Array.isArray(cfg.path)) {
     for (let i = 0; i < cfg.path.length; i++) {
       routers.push({
-        target: targetObject,
+        target: null,
+        serviceInstance: targetObject,
         functionPropertyKey: cfg.functionPropertyKey,
         params: cfg.params,
         path: cfg.path[i],
@@ -498,7 +507,8 @@ export function _RestControllerPushRouter(targetObject: Object, target: Function
   }
   else {
     routers.push({
-      target: targetObject,
+      target: null,
+      serviceInstance: targetObject,
       functionPropertyKey: cfg.functionPropertyKey,
       params: cfg.params,
       path: cfg.path,

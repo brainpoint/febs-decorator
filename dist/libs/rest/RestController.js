@@ -66,8 +66,6 @@ function RestController(cfg) {
     let fooService = Service_1.Service();
     return (target) => {
         fooService(target);
-        let instance = Service_1.getServiceInstances(target);
-        instance = instance[instance.length - 1];
         let routers = Reflect.getOwnMetadata(_RestControllerRouterMetadataKey, target);
         if (routers) {
             let globalRouters = getRestControllerRouters();
@@ -77,7 +75,7 @@ function RestController(cfg) {
                 let reg = getPathReg(pp, val.params);
                 val.reg = reg.reg;
                 val.pathVars = reg.pathVars;
-                val.target = instance;
+                val.target = target;
                 globalRouters.push(val);
             }
         }
@@ -115,7 +113,15 @@ function CallRestControllerRoute(request, ctx) {
                 let matchInfo = { match: true, requestError: null, responseError: null };
                 let ret;
                 try {
-                    ret = yield router.target[router.functionPropertyKey]({
+                    let target;
+                    if (router.serviceInstance) {
+                        target = router.serviceInstance;
+                    }
+                    else {
+                        target = router.serviceInstance = Service_1.getServiceInstances(router.target).instance;
+                        router.target = null;
+                    }
+                    ret = yield target[router.functionPropertyKey]({
                         pathname: decodeURIComponent(pathname),
                         querystring,
                         request,
@@ -332,7 +338,8 @@ function _RestControllerPushRouter(targetObject, target, cfg) {
     if (Array.isArray(cfg.path)) {
         for (let i = 0; i < cfg.path.length; i++) {
             routers.push({
-                target: targetObject,
+                target: null,
+                serviceInstance: targetObject,
                 functionPropertyKey: cfg.functionPropertyKey,
                 params: cfg.params,
                 path: cfg.path[i],
@@ -342,7 +349,8 @@ function _RestControllerPushRouter(targetObject, target, cfg) {
     }
     else {
         routers.push({
-            target: targetObject,
+            target: null,
+            serviceInstance: targetObject,
             functionPropertyKey: cfg.functionPropertyKey,
             params: cfg.params,
             path: cfg.path,

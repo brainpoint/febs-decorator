@@ -8,7 +8,7 @@
 import tap from 'tap'
 // import * as febs from 'febs';
 import { getServiceInstances, Service } from '..'
-import { FeignClient, RequestMapping, RequestMethod, setFeignClientDefaultCfg, MicroserviceInfo } from '..'
+import { FeignClient, RequestMapping, RequestMethod, setFeignClientDefaultCfg, MicroserviceInfo, Autowired } from '..'
 import { except_fail, except_success } from './lib'
 
 @Service()
@@ -16,13 +16,15 @@ class TestService {
   test() {}
 }
 
-console.log(typeof getServiceInstances("")[0].test === 'function');
-
 /**
  * 定义feignClient对象.
  */
 @FeignClient({name: 'base'})
 class TestController {
+  constructor() {
+    console.log('constructor');
+  }
+
   @RequestMapping({path:'/api/xxx', method: RequestMethod.GET})
   async test() {
     // fallback.

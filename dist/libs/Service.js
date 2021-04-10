@@ -9,11 +9,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Bean = exports.Service = exports.getServiceInstances = exports.getGlobalAutowireds = void 0;
+exports.Bean = exports.ImmediatelyService = exports.Service = exports.getServiceInstances = exports.getGlobalWaitAutowireds = exports.setupBeans = void 0;
 require("reflect-metadata");
 const febs = require("febs-browser");
+const FinishDelay = Symbol('FinishDelay');
+const ServiceWaitAutowiredInstance = Symbol('ServiceWaitAutowiredInstance');
+const BeanWaitAutowiredInstance = Symbol('BeanWaitAutowiredInstance');
 const ServiceInstance = Symbol('ServiceInstance');
 const AutowiredInstances = Symbol('AutowiredInstances');
+function getGlobalWaitAutowiredServices() {
+    let instances = global[ServiceWaitAutowiredInstance];
+    if (!instances) {
+        instances = [];
+        global[ServiceWaitAutowiredInstance] = instances;
+    }
+    return instances;
+}
+function getGlobalWaitAutowiredBeans() {
+    let instances = global[BeanWaitAutowiredInstance];
+    if (!instances) {
+        instances = [];
+        global[BeanWaitAutowiredInstance] = instances;
+    }
+    return instances;
+}
 function getGlobalServices() {
     let instances = global[ServiceInstance];
     if (!instances) {
@@ -22,14 +41,59 @@ function getGlobalServices() {
     }
     return instances;
 }
-function getGlobalAutowireds() {
+function setupBeans() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (global[FinishDelay]) {
+            return;
+        }
+        let instances = getGlobalServices();
+        let waitServices = getGlobalWaitAutowiredServices();
+        for (let i = 0; i < waitServices.length; i++) {
+            let { key, target, singleton } = waitServices[i];
+            if (singleton) {
+                let instance = new target();
+                instances[key] = { singleton, instance };
+                yield finishAutowired(key);
+            }
+            else {
+                let callback = () => __awaiter(this, void 0, void 0, function* () {
+                    return new target();
+                });
+                instances[key] = {
+                    singleton, callback
+                };
+                yield finishAutowired(key);
+            }
+        }
+        waitServices.length = 0;
+        let waitBeans = getGlobalWaitAutowiredBeans();
+        for (let i = 0; i < waitBeans.length; i++) {
+            let { key, callback, singleton } = waitBeans[i];
+            if (singleton) {
+                let res = yield callback();
+                instances[key] = { singleton, instance: res };
+                yield finishAutowired(key);
+            }
+            else {
+                instances[key] = {
+                    singleton, callback
+                };
+                yield finishAutowired(key);
+            }
+        }
+        waitBeans.length = 0;
+        global[FinishDelay] = true;
+    });
+}
+exports.setupBeans = setupBeans;
+function getGlobalWaitAutowireds() {
     let instances = global[AutowiredInstances] = global[AutowiredInstances] || [];
     return instances;
 }
-exports.getGlobalAutowireds = getGlobalAutowireds;
+exports.getGlobalWaitAutowireds = getGlobalWaitAutowireds;
 function getServiceInstances(key) {
     let instances = getGlobalServices();
-    return instances[key] ? instances[key].concat() : [];
+    return instances[key];
 }
 exports.getServiceInstances = getServiceInstances;
 function Service(...args) {
@@ -43,26 +107,81 @@ function Service(...args) {
     cfg.singleton = cfg.hasOwnProperty('singleton') ? cfg.singleton : true;
     let { singleton, name } = cfg;
     return (target) => {
-        let instances = getGlobalServices();
         let key = febs.string.isEmpty(name) ? target : name;
-        if (instances[key]) {
+        if (target.__isServiced) {
             throw new Error(`@Bean '${key}': It's already declared`);
         }
-        instances[key] = [];
+        target.__isServiced = true;
+        let instances = getGlobalServices();
+        if (instances.hasOwnProperty(key)) {
+            throw new Error(`@Bean '${key}': It's already declared`);
+        }
+        instances[key] = null;
+        if (global[FinishDelay]) {
+            if (singleton) {
+                let instance = new target();
+                instances[key] = { singleton, instance };
+                finishAutowired(key);
+            }
+            else {
+                let callback = () => __awaiter(this, void 0, void 0, function* () {
+                    return new target();
+                });
+                instances[key] = {
+                    singleton, callback
+                };
+                finishAutowired(key);
+            }
+        }
+        else {
+            let waitInstances = getGlobalWaitAutowiredServices();
+            waitInstances.push({
+                key,
+                target,
+                singleton,
+            });
+        }
+    };
+}
+exports.Service = Service;
+function ImmediatelyService(...args) {
+    let cfg;
+    if (args.length == 0 || typeof args[0] !== 'string') {
+        cfg = args[0] || {};
+    }
+    else {
+        cfg = { name: args[0] };
+    }
+    cfg.singleton = cfg.hasOwnProperty('singleton') ? cfg.singleton : true;
+    let { singleton, name } = cfg;
+    return (target) => {
+        let key = febs.string.isEmpty(name) ? target : name;
+        if (target.__isServiced) {
+            throw new Error(`@Bean '${key}': It's already declared`);
+        }
+        target.__isServiced = true;
+        let instances = getGlobalServices();
+        if (instances.hasOwnProperty(key)) {
+            throw new Error(`@Bean '${key}': It's already declared`);
+        }
+        instances[key] = null;
         if (singleton) {
             let instance = new target();
-            instances[key].push(instance);
-            finishAutowired(key, target, singleton, instance);
+            instances[key] = { singleton, instance };
+            finishAutowired(key);
         }
         else {
             let callback = () => __awaiter(this, void 0, void 0, function* () {
                 return new target();
             });
-            finishAutowired(key, target, singleton, callback);
+            instances[key] = {
+                singleton, callback
+            };
+            finishAutowired(key);
         }
     };
 }
-exports.Service = Service;
+exports.ImmediatelyService = ImmediatelyService;
 function Bean(...args) {
     let cfg;
     if (args.length == 0 || typeof args[0] !== 'string') {
@@ -74,11 +193,12 @@ function Bean(...args) {
     cfg.singleton = cfg.hasOwnProperty('singleton') ? cfg.singleton : true;
     let { singleton, name } = cfg;
     return (target, propertyKey, descriptor) => {
-        let instances = getGlobalServices();
         let key = febs.string.isEmpty(name) ? propertyKey : name;
-        if (instances[key]) {
+        let instances = getGlobalServices();
+        if (instances.hasOwnProperty(key)) {
             throw new Error(`@Bean '${key}': It's already declared`);
         }
+        instances[key] = null;
         let callback = () => __awaiter(this, void 0, void 0, function* () {
             let f = descriptor.value.apply(target);
             if (f instanceof Promise) {
@@ -88,31 +208,46 @@ function Bean(...args) {
                 return f;
             }
         });
-        instances[key] = [];
-        if (singleton) {
-            callback().then(res => {
-                let instance = res;
-                instances[key].push(instance);
-                finishAutowired(key, target, singleton, instance).then();
-            });
+        if (global[FinishDelay]) {
+            if (singleton) {
+                callback().then(res => {
+                    instances[key] = { singleton, instance: res };
+                    finishAutowired(key);
+                });
+            }
+            else {
+                instances[key] = {
+                    singleton, callback
+                };
+                finishAutowired(key);
+            }
         }
         else {
-            finishAutowired(key, target, singleton, callback).then();
+            let waitInstances = getGlobalWaitAutowiredBeans();
+            waitInstances.push({
+                key,
+                singleton,
+                callback,
+            });
         }
     };
 }
 exports.Bean = Bean;
-function finishAutowired(key, target, singleton, instance) {
+function finishAutowired(key) {
     return __awaiter(this, void 0, void 0, function* () {
-        let autos = getGlobalAutowireds();
+        let autos = getGlobalWaitAutowireds();
+        let instance = getServiceInstances(key);
+        if (!instance) {
+            return;
+        }
         for (let i = 0; i < autos.length; i++) {
             const element = autos[i];
             if (element && element.type === key) {
-                if (singleton) {
-                    element.target[element.propertyKey] = instance;
+                if (instance.singleton) {
+                    element.target[element.propertyKey] = instance.instance;
                 }
                 else {
-                    element.target[element.propertyKey] = yield instance();
+                    element.target[element.propertyKey] = yield instance.callback();
                 }
                 autos.splice(i, 1);
                 i--;

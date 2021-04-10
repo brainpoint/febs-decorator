@@ -26,8 +26,10 @@ let TestService = class TestService {
 TestService = __decorate([
     __1.Service()
 ], TestService);
-console.log(typeof __1.getServiceInstances("")[0].test === 'function');
 let TestController = class TestController {
+    constructor() {
+        console.log('constructor');
+    }
     test() {
         return __awaiter(this, void 0, void 0, function* () {
             return 'fail';
@@ -41,7 +43,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TestController.prototype, "test", null);
 TestController = __decorate([
-    __2.FeignClient({ name: 'base' })
+    __2.FeignClient({ name: 'base' }),
+    __metadata("design:paramtypes", [])
 ], TestController);
 function test() {
     return __awaiter(this, void 0, void 0, function* () {
