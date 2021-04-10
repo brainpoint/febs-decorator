@@ -22,23 +22,23 @@ var RequestMethod;
     RequestMethod["OPTIONS"] = "OPTIONS";
 })(RequestMethod = exports.RequestMethod || (exports.RequestMethod = {}));
 function PostMapping(cfg) {
-    return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.POST));
+    return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.POST }));
 }
 exports.PostMapping = PostMapping;
 function PutMapping(cfg) {
-    return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.PUT));
+    return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.PUT }));
 }
 exports.PutMapping = PutMapping;
 function PatchMapping(cfg) {
-    return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.PATCH));
+    return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.PATCH }));
 }
 exports.PatchMapping = PatchMapping;
 function GetMapping(cfg) {
-    return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.GET));
+    return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.GET }));
 }
 exports.GetMapping = GetMapping;
 function DeleteMapping(cfg) {
-    return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.DELETE));
+    return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.DELETE }));
 }
 exports.DeleteMapping = DeleteMapping;
 function RequestMapping(cfg) {

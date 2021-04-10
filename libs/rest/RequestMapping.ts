@@ -49,7 +49,7 @@ export function PostMapping(cfg: {
   /** 指定feignClient response的数据类型 */
   feignCastType?: any,
 }) {
-  return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.POST));
+  return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.POST }));
 }
 
 /**
@@ -69,7 +69,7 @@ export function PutMapping(cfg: {
   /** 指定feignClient response的数据类型 */
   feignCastType?: any,
 }) {
-  return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.PUT));
+  return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.PUT }));
 }
 
 /**
@@ -89,7 +89,7 @@ export function PatchMapping(cfg: {
   /** 指定feignClient response的数据类型 */
   feignCastType?: any,
 }) {
-  return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.PATCH));
+  return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.PATCH }));
 }
 
 /**
@@ -109,7 +109,7 @@ export function GetMapping(cfg: {
   /** 指定feignClient response的数据类型 */
   feignCastType?: any,
 }) {
-  return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.GET));
+  return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.GET }));
 }
 
 /**
@@ -129,7 +129,7 @@ export function DeleteMapping(cfg: {
   /** 指定feignClient response的数据类型 */
   feignCastType?: any,
 }) {
-  return RequestMapping(febs.utils.mergeMap(cfg, RequestMethod.DELETE));
+  return RequestMapping(febs.utils.mergeMap(cfg, { method: RequestMethod.DELETE }));
 }
 
 /**
