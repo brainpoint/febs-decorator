@@ -204,7 +204,7 @@ export async function CallRestControllerRoute(
           router.target = null;
         }
 
-        ret = await target[router.functionPropertyKey]({
+        ret = target[router.functionPropertyKey].call(target, {
           pathname: decodeURIComponent(pathname),
           querystring,
           request,
@@ -212,6 +212,10 @@ export async function CallRestControllerRoute(
           params: router.params,
           pathVars: router.pathVars,
         }, matchInfo, ctx);
+
+        if (ret instanceof Promise) {
+          ret = await ret;
+        }
       }
       catch (err) {
         matchInfo.responseError = err;
@@ -496,8 +500,8 @@ export function _RestControllerPushRouter(targetObject: Object, target: Function
   if (Array.isArray(cfg.path)) {
     for (let i = 0; i < cfg.path.length; i++) {
       routers.push({
-        target: null,
-        serviceInstance: targetObject,
+        target: targetObject,
+        serviceInstance: null,
         functionPropertyKey: cfg.functionPropertyKey,
         params: cfg.params,
         path: cfg.path[i],
@@ -507,8 +511,8 @@ export function _RestControllerPushRouter(targetObject: Object, target: Function
   }
   else {
     routers.push({
-      target: null,
-      serviceInstance: targetObject,
+      target: targetObject,
+      serviceInstance: null,
       functionPropertyKey: cfg.functionPropertyKey,
       params: cfg.params,
       path: cfg.path,

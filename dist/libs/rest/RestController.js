@@ -121,7 +121,7 @@ function CallRestControllerRoute(request, ctx) {
                         target = router.serviceInstance = Service_1.getServiceInstances(router.target).instance;
                         router.target = null;
                     }
-                    ret = yield target[router.functionPropertyKey]({
+                    ret = target[router.functionPropertyKey].call(target, {
                         pathname: decodeURIComponent(pathname),
                         querystring,
                         request,
@@ -129,6 +129,9 @@ function CallRestControllerRoute(request, ctx) {
                         params: router.params,
                         pathVars: router.pathVars,
                     }, matchInfo, ctx);
+                    if (ret instanceof Promise) {
+                        ret = yield ret;
+                    }
                 }
                 catch (err) {
                     matchInfo.responseError = err;
@@ -338,8 +341,8 @@ function _RestControllerPushRouter(targetObject, target, cfg) {
     if (Array.isArray(cfg.path)) {
         for (let i = 0; i < cfg.path.length; i++) {
             routers.push({
-                target: null,
-                serviceInstance: targetObject,
+                target: targetObject,
+                serviceInstance: null,
                 functionPropertyKey: cfg.functionPropertyKey,
                 params: cfg.params,
                 path: cfg.path[i],
@@ -349,8 +352,8 @@ function _RestControllerPushRouter(targetObject, target, cfg) {
     }
     else {
         routers.push({
-            target: null,
-            serviceInstance: targetObject,
+            target: targetObject,
+            serviceInstance: null,
             functionPropertyKey: cfg.functionPropertyKey,
             params: cfg.params,
             path: cfg.path,
