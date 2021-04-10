@@ -80,12 +80,8 @@ export function RestObject(...args: any[]) {
     let propertyKey = args[1];
     let parameterIndex = args[2];
     if (Reflect.hasOwnMetadata(_RestObjectMetadataKey, target, propertyKey)) {
-      throw new febs.exception(
+      throw new Error(
         '@RestObject must only one',
-        febs.exception.ERROR,
-        __filename,
-        __line,
-        __column
       );
     }
 
@@ -102,12 +98,8 @@ export function RestObject(...args: any[]) {
   } else {
     return (target: Object, propertyKey: string | symbol, parameterIndex: number): void => {
       if (Reflect.hasOwnMetadata(_RestObjectMetadataKey, target, propertyKey)) {
-        throw new febs.exception(
+        throw new Error(
           '@RestObject must only one',
-          febs.exception.ERROR,
-          __filename,
-          __line,
-          __column
         );
       }
 

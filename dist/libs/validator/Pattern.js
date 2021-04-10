@@ -20,14 +20,14 @@ function verify_list(propertyValue, decoratorData) {
 }
 function DecoratorList(cfg) {
     if (!cfg.regexp || typeof cfg.regexp.test !== 'function') {
-        throw new febs.exception('verify @Pattern regexp error', febs.exception.ERROR, __filename, __line, __column);
+        throw new febs.exception('verify @Pattern regexp error', febs.exception.PARAM, __filename, __line, __column);
     }
     return validatorUtils_1.getPropertyDecorator(verify_list, cfg);
 }
 Pattern.List = DecoratorList;
 function Pattern(cfg) {
     if (!cfg.regexp || typeof cfg.regexp.test !== 'function') {
-        throw new febs.exception('verify @Pattern regexp error', febs.exception.ERROR, __filename, __line, __column);
+        throw new febs.exception('verify @Pattern regexp error', febs.exception.PARAM, __filename, __line, __column);
     }
     return validatorUtils_1.getPropertyDecorator(verify, cfg);
 }

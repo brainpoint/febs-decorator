@@ -35,12 +35,8 @@ export function PathVariable(cfg: {
   castType?: any,
 }): ParameterDecorator {
   if (febs.string.isEmpty(cfg.name)) {
-    throw new febs.exception(
-      '@RequestParam need \'name\' parameter',
-      febs.exception.ERROR,
-      __filename,
-      __line,
-      __column
+    throw new Error(
+      '@RequestParam need \'name\' parameter'
     )
   }
 
@@ -79,7 +75,7 @@ export function _PathVariableDo(target: Object, propertyKey: string | symbol, ar
       if (!pathVariables.hasOwnProperty(parameter.name)) {
         throw new febs.exception(
           `@PathVariable parameter '${parameter.name}' cannot be finded`,
-          febs.exception.ERROR,
+          febs.exception.PARAM,
           __filename,
           __line,
           __column

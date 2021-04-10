@@ -68,7 +68,7 @@ function getFeignClientDefaultCfg() {
 exports.getFeignClientDefaultCfg = getFeignClientDefaultCfg;
 function FeignClient(cfg) {
     if (febs.string.isEmpty(cfg.name)) {
-        throw new febs.exception("@FeignClient need 'name' parameter", febs.exception.ERROR, __filename, __line, __column);
+        throw new Error("@FeignClient need 'name' parameter");
     }
     cfg.path = cfg.path || '';
     return (target) => {
@@ -83,7 +83,7 @@ exports.FeignClient = FeignClient;
 function _FeignClientDo(target, requestMapping, restObject, castType, args, fallback) {
     return __awaiter(this, void 0, void 0, function* () {
         if (requestMapping.path.length > 1) {
-            throw new febs.exception("@RequestMapping in FeignClient class, 'path' must container only one url", febs.exception.ERROR, __filename, __line, __column);
+            throw new Error("@RequestMapping in FeignClient class, 'path' must container only one url");
         }
         let meta = Reflect.getOwnMetadata(exports._FeignClientMetadataKey, target.constructor);
         let url;
@@ -95,7 +95,7 @@ function _FeignClientDo(target, requestMapping, restObject, castType, args, fall
         }
         let feignClientCfg = getFeignClientDefaultCfg();
         if (typeof feignClientCfg.findServiceCallback !== 'function') {
-            throw new febs.exception(`feignClient 'findServiceCallback' must not be null`, febs.exception.ERROR, __filename, __line, __column);
+            throw new Error(`feignClient 'findServiceCallback' must be a function`);
         }
         let excludeHost = null;
         let request;

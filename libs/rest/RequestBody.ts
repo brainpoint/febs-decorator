@@ -46,13 +46,8 @@ export function RequestBody(...args: any[]) {
   
     return (target: Object, propertyKey: string | symbol, parameterIndex: number): void => {
       if (Reflect.hasOwnMetadata(_RequestBodyMetadataKey, target, propertyKey)) {
-        throw new febs.exception(
-          '@RequestBody must only one',
-          febs.exception.ERROR,
-          __filename,
-          __line,
-          __column
-        );
+        throw new Error(
+          '@RequestBody must only one');
       }
 
       Reflect.defineMetadata(_RequestBodyMetadataKey, {
@@ -76,13 +71,8 @@ export function RequestBody(...args: any[]) {
     let parameterIndex = args[2];
 
     if (Reflect.hasOwnMetadata(_RequestBodyMetadataKey, target, propertyKey)) {
-        throw new febs.exception(
-          '@RequestBody must only one',
-          febs.exception.ERROR,
-          __filename,
-          __line,
-          __column
-        );
+        throw new Error(
+          '@RequestBody must only one');
       }
 
       Reflect.defineMetadata(_RequestBodyMetadataKey, {
@@ -110,7 +100,7 @@ export function _RequestBodyDo(target: Object, propertyKey: string | symbol, arg
   let argVal = args[parameter.parameterIndex];
   if (parameter.required) {
     if (parameter.parameterIndex >= args.length || febs.utils.isNull(argVal)) {
-      throw new Error(`@RequestBody Missing required argument`);
+      throw new febs.exception(`@RequestBody Missing required argument`, febs.exception.PARAM, __filename, __line, __column);
     }
   }
 

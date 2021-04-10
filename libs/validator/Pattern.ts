@@ -44,7 +44,7 @@ function DecoratorList(cfg: {
   if (!cfg.regexp || typeof cfg.regexp.test !== 'function') {
     throw new febs.exception(
       'verify @Pattern regexp error',
-      febs.exception.ERROR,
+      febs.exception.PARAM,
       __filename,
       __line,
       __column
@@ -67,7 +67,7 @@ export function Pattern(cfg: { regexp: RegExp; message?: string }) {
   if (!cfg.regexp || typeof cfg.regexp.test !== 'function') {
     throw new febs.exception(
       'verify @Pattern regexp error',
-      febs.exception.ERROR,
+      febs.exception.PARAM,
       __filename,
       __line,
       __column

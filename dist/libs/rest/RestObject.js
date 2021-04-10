@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports._RestObjectDo = exports.RestObject = void 0;
 require("reflect-metadata");
-const febs = require("febs-browser");
 const RequestMapping_1 = require("./RequestMapping");
 const _RestObjectMetadataKey = Symbol('_RestObjectMetadataKey');
 function RestObject(...args) {
@@ -11,7 +10,7 @@ function RestObject(...args) {
         let propertyKey = args[1];
         let parameterIndex = args[2];
         if (Reflect.hasOwnMetadata(_RestObjectMetadataKey, target, propertyKey)) {
-            throw new febs.exception('@RestObject must only one', febs.exception.ERROR, __filename, __line, __column);
+            throw new Error('@RestObject must only one');
         }
         Reflect.defineMetadata(_RestObjectMetadataKey, {
             parameterIndex,
@@ -25,7 +24,7 @@ function RestObject(...args) {
     else {
         return (target, propertyKey, parameterIndex) => {
             if (Reflect.hasOwnMetadata(_RestObjectMetadataKey, target, propertyKey)) {
-                throw new febs.exception('@RestObject must only one', febs.exception.ERROR, __filename, __line, __column);
+                throw new Error('@RestObject must only one');
             }
             Reflect.defineMetadata(_RestObjectMetadataKey, {
                 parameterIndex,

@@ -43,7 +43,7 @@ function DecoratorList(cfg: {
   if (!Array.isArray(cfg.allows)) {
     throw new febs.exception(
       'verify @Enum allows error',
-      febs.exception.ERROR,
+      febs.exception.PARAM,
       __filename,
       __line,
       __column
@@ -65,7 +65,7 @@ export function Enum(cfg: { allows: any[]; message?: string }) {
   if (!Array.isArray(cfg.allows)) {
     throw new febs.exception(
       'verify @Enum allows error',
-      febs.exception.ERROR,
+      febs.exception.PARAM,
       __filename,
       __line,
       __column

@@ -42,12 +42,8 @@ export function RequestParam(cfg: {
 }): ParameterDecorator {
   
   if (febs.string.isEmpty(cfg.name)) {
-    throw new febs.exception(
-      '@RequestParam need \'name\' parameter',
-      febs.exception.ERROR,
-      __filename,
-      __line,
-      __column
+    throw new Error(
+      '@RequestParam need \'name\' parameter'
     )
   }
 
@@ -84,7 +80,7 @@ export function _RequestParamDo(target: Object, propertyKey: string | symbol, ar
       if (parameter.required) {
         if (parameter.parameterIndex >= args.length || febs.utils.isNull(val)) {
           if (!parameter.defaultValue) {
-            throw new Error("@RequestParam Missing required argument.");
+            throw new febs.exception("@RequestParam Missing required argument.", febs.exception.PARAM, __filename, __line, __column);
           }
         }
       }

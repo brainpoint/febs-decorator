@@ -155,23 +155,15 @@ export function RequestMapping(cfg: {
   let cpath = Array.isArray(cfg.path) ? cfg.path : [cfg.path];
   for (let i = 0; i < cpath.length; i++) {
     if (febs.string.isEmpty(cpath[i])) {
-      throw new febs.exception(
-        '@RequestMapping need \'path\' parameter',
-        febs.exception.ERROR,
-        __filename,
-        __line,
-        __column
+      throw new Error(
+        '@RequestMapping need \'path\' parameter'
       );
     }
   }
 
   if (cfg.path.length == 0) {
-    throw new febs.exception(
-      '@RequestMapping need \'path\' parameter',
-      febs.exception.ERROR,
-      __filename,
-      __line,
-      __column
+    throw new Error(
+      '@RequestMapping need \'path\' parameter'
     )
   }
 
@@ -303,12 +295,8 @@ function getPathVariables(urlPaths: string[]): { [key: string]: string } {
       if (/^\{[a-zA-Z\$_][a-zA-Z\d_]*\}$/.test(url)) {
         url = url.substr(1, url.length - 2);
         if (vars.hasOwnProperty(url)) {
-          throw new febs.exception(
-            '@RequestMapping path variables is conflicted',
-            febs.exception.ERROR,
-            __filename,
-            __line,
-            __column
+          throw new Error(
+            '@RequestMapping path variables is conflicted: ' + urlPaths.toString()
           );
         }
         else {

@@ -8,7 +8,7 @@ var queryString = require('../utils/qs/dist');
 const _RequestParamMetadataKey = Symbol('_RequestParamMetadataKey');
 function RequestParam(cfg) {
     if (febs.string.isEmpty(cfg.name)) {
-        throw new febs.exception('@RequestParam need \'name\' parameter', febs.exception.ERROR, __filename, __line, __column);
+        throw new Error('@RequestParam need \'name\' parameter');
     }
     cfg.required = febs.utils.isNull(cfg.required) ? true : cfg.required;
     return (target, propertyKey, parameterIndex) => {
@@ -41,7 +41,7 @@ function _RequestParamDo(target, propertyKey, args, requestMapping) {
             if (parameter.required) {
                 if (parameter.parameterIndex >= args.length || febs.utils.isNull(val)) {
                     if (!parameter.defaultValue) {
-                        throw new Error("@RequestParam Missing required argument.");
+                        throw new febs.exception("@RequestParam Missing required argument.", febs.exception.PARAM, __filename, __line, __column);
                     }
                 }
             }

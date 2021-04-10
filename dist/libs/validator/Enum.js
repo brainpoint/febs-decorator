@@ -19,14 +19,14 @@ function verify_list(propertyValue, decoratorData) {
 }
 function DecoratorList(cfg) {
     if (!Array.isArray(cfg.allows)) {
-        throw new febs.exception('verify @Enum allows error', febs.exception.ERROR, __filename, __line, __column);
+        throw new febs.exception('verify @Enum allows error', febs.exception.PARAM, __filename, __line, __column);
     }
     return validatorUtils_1.getPropertyDecorator(verify_list, cfg);
 }
 Enum.List = DecoratorList;
 function Enum(cfg) {
     if (!Array.isArray(cfg.allows)) {
-        throw new febs.exception('verify @Enum allows error', febs.exception.ERROR, __filename, __line, __column);
+        throw new febs.exception('verify @Enum allows error', febs.exception.PARAM, __filename, __line, __column);
     }
     return validatorUtils_1.getPropertyDecorator(verify, cfg);
 }

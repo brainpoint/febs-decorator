@@ -48,7 +48,7 @@ function DecoratorList(...args: any[]) {
     if (typeof cfg.regexp.test !== 'function') {
       throw new febs.exception(
         'verify @Email regexp error',
-        febs.exception.ERROR,
+        febs.exception.PARAM,
         __filename,
         __line,
         __column
@@ -92,7 +92,7 @@ export function Email(...args: any[]) {
     if (typeof cfg.regexp.test !== 'function') {
       throw new febs.exception(
         'verify @Email regexp error',
-        febs.exception.ERROR,
+        febs.exception.PARAM,
         __filename,
         __line,
         __column

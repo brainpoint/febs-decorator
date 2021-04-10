@@ -22,7 +22,7 @@ function DecoratorList(...args) {
         cfg = cfg || {};
         cfg.regexp = cfg.regexp || defaultReg;
         if (typeof cfg.regexp.test !== 'function') {
-            throw new febs.exception('verify @Email regexp error', febs.exception.ERROR, __filename, __line, __column);
+            throw new febs.exception('verify @Email regexp error', febs.exception.PARAM, __filename, __line, __column);
         }
         return validatorUtils_1.getPropertyDecorator(verify_list, cfg);
     }
@@ -39,7 +39,7 @@ function Email(...args) {
         cfg = cfg || {};
         cfg.regexp = cfg.regexp || defaultReg;
         if (typeof cfg.regexp.test !== 'function') {
-            throw new febs.exception('verify @Email regexp error', febs.exception.ERROR, __filename, __line, __column);
+            throw new febs.exception('verify @Email regexp error', febs.exception.PARAM, __filename, __line, __column);
         }
         return validatorUtils_1.getPropertyDecorator(verify, cfg);
     }
