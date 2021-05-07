@@ -146,7 +146,7 @@ export function getFeignClientDefaultCfg(): {
 export function FeignClient(cfg: {
   /** 指定微服务的名称 */
   name: string
-  /** 用于调试, 指定调用的地址, 使用此地址通信, 忽略RequestMapping中的地址. */
+  /** 用于调试, 指定调用的地址, 使用此地址通信. */
   url?: string
   /** 定义FeignClient类中请求的统一前缀 */
   path?: string
@@ -188,12 +188,7 @@ export async function _FeignClientDo(
     target.constructor
   )
 
-  let url
-  if (!febs.string.isEmpty(meta.url)) {
-    url = meta.url
-  } else {
-    url = urlUtils.join(meta.path, requestMapping.path[0])
-  }
+  let url = urlUtils.join(meta.path, requestMapping.path[0]);
 
   let feignClientCfg = getFeignClientDefaultCfg();
   if (typeof feignClientCfg.findServiceCallback !== 'function') {
@@ -208,28 +203,35 @@ export async function _FeignClientDo(
 
   // net request.
   for (let i = 0; i < feignClientCfg.maxAutoRetriesNextServer; i++) {
-    let host: MicroserviceInfo;
-    try {
-      host = await feignClientCfg.findServiceCallback(meta.name, excludeHost);
-      if (!host) {
+
+    let uri;
+    let uriPathname = url;
+    if (febs.string.isEmpty(meta.url)) {
+      let host: MicroserviceInfo;
+      try {
+        host = await feignClientCfg.findServiceCallback(meta.name, excludeHost);
+        if (!host) {
+          continue;
+        }
+      } catch (e) {
+        lastError = e;
+        logError(e);
         continue;
       }
-    } catch (e) {
-      lastError = e;
-      logError(e);
-      continue;
-    }
     
-    excludeHost = `${host.ip}:${host.port}`;
-    let uriPathname = febs.string.isEmpty(meta.url) ? urlUtils.join(meta.path, url) : meta.url;
-    let uri = febs.string.isEmpty(meta.url) ? urlUtils.join(excludeHost, uriPathname) : uriPathname;
+      excludeHost = `${host.ip}:${host.port}`;
+      uri = urlUtils.join(excludeHost, url);
 
-    if (host.port == 443) {
-      if (uri[0] == '/') uri = 'https:/' + uri;
-      else uri = 'https://' + uri;
-    } else {
-      if (uri[0] == '/') uri = 'http:/' + uri;
-      else uri = 'http://' + uri;
+      if (host.port == 443) {
+        if (uri[0] == '/') uri = 'https:/' + uri;
+        else uri = 'https://' + uri;
+      } else {
+        if (uri[0] == '/') uri = 'http:/' + uri;
+        else uri = 'http://' + uri;
+      }
+    }
+    else {
+      uri = urlUtils.join(meta.url, url);
     }
 
     request = {
@@ -243,6 +245,9 @@ export async function _FeignClientDo(
     }
     
     for (let j = 0; j < feignClientCfg.maxAutoRetries; j++) {
+
+      let status: number;
+
       let r: any;
       let interval: number = Date.now();
       try {
@@ -254,6 +259,8 @@ export async function _FeignClientDo(
         let ret = await feignClientCfg.fetch(uri, request);
         response = ret;
 
+        status = ret.status;
+
         interval = Date.now() - interval;
 
         // ok.
@@ -263,19 +270,19 @@ export async function _FeignClientDo(
         // formdata.
         if (febs.string.isEmpty(contentType) || contentType.indexOf('application/x-www-form-urlencoded') >= 0) {
           let txt = await ret.text();
-          logFeignClient(request, febs.utils.mergeMap(response, {body: txt}), interval);
+          logFeignClient(request, febs.utils.mergeMap(response, { body: txt }), interval);
 
           r = qs.parse(txt)
         }
         // json.
         else if (contentType.indexOf('application/json') >= 0) {
           r = await ret.json();
-          logFeignClient(request, febs.utils.mergeMap(response, {body: r}), interval);
+          logFeignClient(request, febs.utils.mergeMap(response, { body: r }), interval);
         }
         // stream.
         else {
           r = await ret.blob();
-          logFeignClient(request, febs.utils.mergeMap(response, {body: r}), interval);
+          logFeignClient(request, febs.utils.mergeMap(response, { body: r }), interval);
         }
         responseMsg = r;
       } catch (e) {
@@ -287,6 +294,10 @@ export async function _FeignClientDo(
 
       // 返回对象.
       try {
+        if (status && (status < 200 || status >= 300)) {
+          throw new Error("HttpStatusCode is " + status);
+        }
+
         if (!r) {
           return r;
         }

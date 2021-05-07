@@ -16,7 +16,7 @@ import * as fetch from 'febs-browser/types/fetch.d';
 export function FeignClient(cfg: {
   /** 指定微服务的名称 */
   name: string
-  /** 用于调试, 指定调用的地址, 使用此地址通信, 忽略RequestMapping中的地址. */
+  /** 用于调试, 指定调用的地址, 使用此地址通信. */
   url?: string
   /** 定义FeignClient类中请求的统一前缀 */
   path?: string

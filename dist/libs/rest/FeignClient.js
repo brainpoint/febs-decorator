@@ -86,13 +86,7 @@ function _FeignClientDo(target, requestMapping, restObject, castType, args, fall
             throw new Error("@RequestMapping in FeignClient class, 'path' must container only one url");
         }
         let meta = Reflect.getOwnMetadata(exports._FeignClientMetadataKey, target.constructor);
-        let url;
-        if (!febs.string.isEmpty(meta.url)) {
-            url = meta.url;
-        }
-        else {
-            url = urlUtils_1.default.join(meta.path, requestMapping.path[0]);
-        }
+        let url = urlUtils_1.default.join(meta.path, requestMapping.path[0]);
         let feignClientCfg = getFeignClientDefaultCfg();
         if (typeof feignClientCfg.findServiceCallback !== 'function') {
             throw new Error(`feignClient 'findServiceCallback' must be a function`);
@@ -103,32 +97,38 @@ function _FeignClientDo(target, requestMapping, restObject, castType, args, fall
         let responseMsg;
         let lastError;
         for (let i = 0; i < feignClientCfg.maxAutoRetriesNextServer; i++) {
-            let host;
-            try {
-                host = yield feignClientCfg.findServiceCallback(meta.name, excludeHost);
-                if (!host) {
+            let uri;
+            let uriPathname = url;
+            if (febs.string.isEmpty(meta.url)) {
+                let host;
+                try {
+                    host = yield feignClientCfg.findServiceCallback(meta.name, excludeHost);
+                    if (!host) {
+                        continue;
+                    }
+                }
+                catch (e) {
+                    lastError = e;
+                    logger_1.logError(e);
                     continue;
                 }
-            }
-            catch (e) {
-                lastError = e;
-                logger_1.logError(e);
-                continue;
-            }
-            excludeHost = `${host.ip}:${host.port}`;
-            let uriPathname = febs.string.isEmpty(meta.url) ? urlUtils_1.default.join(meta.path, url) : meta.url;
-            let uri = febs.string.isEmpty(meta.url) ? urlUtils_1.default.join(excludeHost, uriPathname) : uriPathname;
-            if (host.port == 443) {
-                if (uri[0] == '/')
-                    uri = 'https:/' + uri;
-                else
-                    uri = 'https://' + uri;
+                excludeHost = `${host.ip}:${host.port}`;
+                uri = urlUtils_1.default.join(excludeHost, url);
+                if (host.port == 443) {
+                    if (uri[0] == '/')
+                        uri = 'https:/' + uri;
+                    else
+                        uri = 'https://' + uri;
+                }
+                else {
+                    if (uri[0] == '/')
+                        uri = 'http:/' + uri;
+                    else
+                        uri = 'http://' + uri;
+                }
             }
             else {
-                if (uri[0] == '/')
-                    uri = 'http:/' + uri;
-                else
-                    uri = 'http://' + uri;
+                uri = urlUtils_1.default.join(meta.url, url);
             }
             request = {
                 method: requestMapping.method.toString(),
@@ -140,6 +140,7 @@ function _FeignClientDo(target, requestMapping, restObject, castType, args, fall
                 url: uri,
             };
             for (let j = 0; j < feignClientCfg.maxAutoRetries; j++) {
+                let status;
                 let r;
                 let interval = Date.now();
                 try {
@@ -148,6 +149,7 @@ function _FeignClientDo(target, requestMapping, restObject, castType, args, fall
                     lastError = null;
                     let ret = yield feignClientCfg.fetch(uri, request);
                     response = ret;
+                    status = ret.status;
                     interval = Date.now() - interval;
                     let contentType = ret.headers.get('content-type') || null;
                     if (Array.isArray(contentType)) {
@@ -176,6 +178,9 @@ function _FeignClientDo(target, requestMapping, restObject, castType, args, fall
                     continue;
                 }
                 try {
+                    if (status && (status < 200 || status >= 300)) {
+                        throw new Error("HttpStatusCode is " + status);
+                    }
                     if (!r) {
                         return r;
                     }
