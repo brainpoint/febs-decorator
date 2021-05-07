@@ -95,7 +95,7 @@ function logBasic(prefix, ip, request, response, interval, cb) {
         msg = cb(msg);
     }
     if (!response.err) {
-        msg += `[${ip}] <--- HTTP/1.1 ${response.status} (${interval}ms)`;
+        msg += `[${ip}] <--- HTTP/1.1 ${response.status} (${interval}ms)\n`;
     }
     else {
         msg += getErrorMessage(response.err);
@@ -121,14 +121,13 @@ function logHeaders(prefix, ip, request, response, interval, cb) {
         return msg;
     }
     if (response.headers) {
-        for (const key in response.headers) {
-            let val = response.headers[key];
+        response.headers.forEach(function (val, key) {
             if (!Array.isArray(val))
                 val = [val];
             for (let i = 0; i < val.length; i++) {
                 msg += (` ${key}: ${val[i]}\n`);
             }
-        }
+        });
     }
     if (cb) {
         msg = cb(msg);
@@ -144,7 +143,17 @@ function logFull(prefix, ip, request, response, interval) {
         msg += (`[content]\n`);
         if (response.body) {
             if (typeof response.body === 'object') {
-                msg += (` blob...\n`);
+                let contentType = response.headers.get('content-type') || null;
+                if (Array.isArray(contentType)) {
+                    contentType = contentType[0];
+                }
+                contentType = contentType ? contentType.toLowerCase() : contentType;
+                if (contentType.indexOf('application/json') >= 0) {
+                    msg += JSON.stringify(response.body) + '\n';
+                }
+                else {
+                    msg += (` blob...\n`);
+                }
             }
             else {
                 msg += (response.body) + '\n';
