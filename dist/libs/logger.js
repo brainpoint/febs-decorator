@@ -121,13 +121,25 @@ function logHeaders(prefix, ip, request, response, interval, cb) {
         return msg;
     }
     if (response.headers) {
-        response.headers.forEach(function (val, key) {
-            if (!Array.isArray(val))
-                val = [val];
-            for (let i = 0; i < val.length; i++) {
-                msg += (` ${key}: ${val[i]}\n`);
+        if (response.headers instanceof Map) {
+            response.headers.forEach(function (val, key) {
+                if (!Array.isArray(val))
+                    val = [val];
+                for (let i = 0; i < val.length; i++) {
+                    msg += (` ${key}: ${val[i]}\n`);
+                }
+            });
+        }
+        else {
+            for (const key in response.headers) {
+                let val = response.headers[key];
+                if (!Array.isArray(val))
+                    val = [val];
+                for (let i = 0; i < val.length; i++) {
+                    msg += (` ${key}: ${val[i]}\n`);
+                }
             }
-        });
+        }
     }
     if (cb) {
         msg = cb(msg);
@@ -143,7 +155,13 @@ function logFull(prefix, ip, request, response, interval) {
         msg += (`[content]\n`);
         if (response.body) {
             if (typeof response.body === 'object') {
-                let contentType = response.headers.get('content-type') || null;
+                let contentType;
+                if (typeof response.headers.get === 'function') {
+                    contentType = response.headers.get('content-type') || null;
+                }
+                else {
+                    contentType = response.headers['content-type'] || null;
+                }
                 if (Array.isArray(contentType)) {
                     contentType = contentType[0];
                 }

@@ -194,12 +194,23 @@ function logHeaders(prefix:string, ip:string, request: any, response: any, inter
 
   // response headers.
   if (response.headers) {
-    response.headers.forEach(function (val:any, key: string) {
-      if (!Array.isArray(val)) val = [val];
-      for (let i = 0; i < val.length; i++) {
-        msg += (` ${key}: ${val[i]}\n`);
+    if (response.headers instanceof Map) {
+      response.headers.forEach(function (val: any, key: string) {
+        if (!Array.isArray(val)) val = [val];
+        for (let i = 0; i < val.length; i++) {
+          msg += (` ${key}: ${val[i]}\n`);
+        }
+      });
+    }
+    else {
+      for (const key in response.headers) {
+        let val = response.headers[key];
+        if (!Array.isArray(val)) val = [val];
+        for (let i = 0; i < val.length; i++) {
+          msg += (` ${key}: ${val[i]}\n`);
+        }
       }
-    });
+    }
   }
 
   if (cb) {
@@ -224,7 +235,14 @@ function logFull(prefix:string, ip:string, request: any, response: any, interval
     if (response.body) {
       
       if (typeof response.body === 'object') {
-        let contentType = response.headers.get('content-type') || null;
+        let contentType;
+        if (typeof response.headers.get === 'function') {
+          contentType = response.headers.get('content-type') || null;
+        }
+        else {
+          contentType = response.headers['content-type'] || null;
+        }
+
         if (Array.isArray(contentType)) { contentType = contentType[0]; }
         contentType = contentType ? contentType.toLowerCase() : contentType;
         if (contentType.indexOf('application/json') >= 0) {
