@@ -100,13 +100,21 @@ function RequestMapping(cfg) {
             }
             let urlPaths = setPathVariables(cpath, pathVariables);
             let requestDefaultCfg = FeignClient_2.getFeignClientDefaultCfg();
+            let headers;
+            if (cfg.headers && typeof cfg.headers === 'function') {
+                headers = cfg.headers();
+            }
+            else {
+                headers = cfg.headers;
+            }
+            const defaultHeaders = febs.utils.mergeMap(requestDefaultCfg.headers, headers);
             let requestMappingParam = {
                 path: urlPaths,
                 method: cfg.method,
                 mode: cfg.mode || requestDefaultCfg.mode,
-                headers: cfg.headers || requestDefaultCfg.headers,
+                headers: defaultHeaders,
                 timeout: cfg.timeout || requestDefaultCfg.timeout,
-                credentials: cfg.credentials || requestDefaultCfg.credentials,
+                credentials: cfg.hasOwnProperty('credentials') ? cfg.credentials : requestDefaultCfg.credentials,
                 body: null,
             };
             RequestBody_1._RequestBodyDo(target, propertyKey, arguments, requestMappingParam);

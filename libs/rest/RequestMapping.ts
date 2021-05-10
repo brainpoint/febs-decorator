@@ -41,7 +41,7 @@ export function PostMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string|string[] },
+  headers?: { [key: string]: string|string[] } | (()=>{ [key: string]: string|string[] }),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -61,7 +61,7 @@ export function PutMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?的qs */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string|string[] },
+  headers?: { [key: string]: string|string[] } | (()=>{ [key: string]: string|string[] }),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -81,7 +81,7 @@ export function PatchMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string|string[] },
+  headers?: { [key: string]: string|string[] } | (()=>{ [key: string]: string|string[] }),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -101,7 +101,7 @@ export function GetMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string|string[] },
+  headers?: { [key: string]: string|string[] } | (()=>{ [key: string]: string|string[] }),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -121,7 +121,7 @@ export function DeleteMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header */
-  headers?: { [key: string]: string|string[] },
+  headers?: { [key: string]: string|string[] } | (()=>{ [key: string]: string|string[] }),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -143,7 +143,7 @@ export function RequestMapping(cfg: {
   /** 默认为 GET */
   method?: RequestMethod,
   /** 附加的header */
-  headers?: { [key: string]: string|string[] },
+  headers?: { [key: string]: string|string[] } | (()=>{ [key: string]: string|string[] }),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -241,15 +241,23 @@ export function RequestMapping(cfg: {
       }
 
       let urlPaths = setPathVariables(cpath, pathVariables);
-
       let requestDefaultCfg = getFeignClientDefaultCfg();
+
+      let headers;
+      if (cfg.headers && typeof cfg.headers === 'function') {
+        headers = cfg.headers();
+      } else {
+        headers = cfg.headers;
+      }
+      const defaultHeaders = febs.utils.mergeMap(requestDefaultCfg.headers, headers);
+
       let requestMappingParam = {
         path: urlPaths,
         method: cfg.method,
         mode: cfg.mode || requestDefaultCfg.mode,
-        headers: cfg.headers || requestDefaultCfg.headers,
+        headers: defaultHeaders,
         timeout: cfg.timeout || requestDefaultCfg.timeout,
-        credentials: cfg.credentials || requestDefaultCfg.credentials,
+        credentials: cfg.hasOwnProperty('credentials')? cfg.credentials: requestDefaultCfg.credentials,
         body: null as string,
       };
 

@@ -195,6 +195,9 @@ function CallRestControllerRoute(request, ctx) {
 }
 exports.CallRestControllerRoute = CallRestControllerRoute;
 function _RestControllerDo(target, ctx, matchInfo, headers, castType, args, pathname, querystring, request, response, params, pathVars) {
+    if (headers && typeof headers === 'function') {
+        headers = headers();
+    }
     const defaultHeaders = febs.utils.mergeMap(getRestControllerDefaultCfg().headers, headers);
     if (defaultHeaders) {
         for (const key in defaultHeaders) {

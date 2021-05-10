@@ -3,11 +3,13 @@
 /// <reference types="node" />
 
 
+export type Headers = { [field: string]: string | string[] };
+
 export interface RestRequest {
   /**
    * Return request header
    */
-  headers: { [field:string]:string|string[] };
+  headers: Headers;
   /**
    * Get/Set request URL.
    */
@@ -50,7 +52,7 @@ export interface RestResponse {
   /**
    * response headers
    */
-  headers: { [field:string]:string|string[] };
+  headers: Headers;
   /**
    * Get/Set response status code.
    */

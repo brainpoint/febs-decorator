@@ -298,7 +298,7 @@ export function _RestControllerDo(
   target: Object,
   ctx: any,
   matchInfo: { match: boolean, requestError: Error, responseError: Error },
-  headers: { [key: string]: string|string[] },
+  headers: { [key: string]: string|string[] } | (()=>{ [key: string]: string|string[] }),
   castType: any,
   args: IArguments,
   pathname: string,
@@ -316,6 +316,10 @@ export function _RestControllerDo(
   pathVars?: {[name:string]:number},
 ): boolean {
 
+  if (headers && typeof headers === 'function') {
+    headers = headers();
+  }
+  
   // save headers.
   const defaultHeaders = febs.utils.mergeMap(getRestControllerDefaultCfg().headers, headers);
   if (defaultHeaders) {

@@ -142,7 +142,7 @@ export function PostMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: { [key: string]: string|string[] },
+  headers?: Rest.Headers | (()=>Rest.Headers),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -160,7 +160,7 @@ export function PutMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: { [key: string]: string|string[] },
+  headers?: Rest.Headers | (()=>Rest.Headers),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -178,7 +178,7 @@ export function PatchMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: { [key: string]: string|string[] },
+  headers?: Rest.Headers | (()=>Rest.Headers),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -196,7 +196,7 @@ export function GetMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: { [key: string]: string|string[] },
+  headers?: Rest.Headers | (()=>Rest.Headers),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -214,7 +214,7 @@ export function DeleteMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: { [key: string]: string|string[] },
+  headers?: Rest.Headers | (()=>Rest.Headers),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -233,8 +233,8 @@ export function RequestMapping(cfg: {
   path: string | string[],
   /** 默认为 GET */
   method?: RequestMethod,
-  /** 附加的header; (请求或响应的header) */
-  headers?: { [key: string]: string|string[] },
+  /** 附加的header; (请求或响应的header, 可使用Headers对象或回调方法获取headers) */
+  headers?: Rest.Headers | (()=>Rest.Headers),
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string | 'no-cors' | 'cors' | 'same-origin',
