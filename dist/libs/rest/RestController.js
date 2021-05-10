@@ -72,6 +72,7 @@ function RestController(cfg) {
             for (let p in routers) {
                 let val = routers[p];
                 let pp = urlUtils_1.default.join(cfg.path, val.path);
+                pp = encodeURIComponent(pp);
                 let reg = getPathReg(pp, val.params);
                 val.reg = reg.reg;
                 val.pathVars = reg.pathVars;
