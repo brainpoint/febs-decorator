@@ -132,7 +132,19 @@ export function RestController(cfg?: {
       for (let p in routers) {
         let val = routers[p];
         let pp = urlUtils.join(cfg.path, val.path);
-        pp = encodeURIComponent(pp);
+        let pps = pp.split('/');
+        pp = '';
+        for (let i = 0; i < pps.length; i++) {
+          if (pp.length > 0 && pp[pp.length - 1] != '/') {
+            pp += '/';
+          }
+          if (pps[i].length != 0) {
+            pp += encodeURIComponent(pps[i]);
+          }
+          else if (pp.length == 0) {
+            pp += '/';
+          }
+        }
         let reg = getPathReg(pp, val.params);
         val.reg = reg.reg;
         val.pathVars = reg.pathVars;
