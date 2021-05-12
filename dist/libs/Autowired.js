@@ -9,10 +9,16 @@ function Autowired(type) {
         if (ins) {
             if (ins.singleton) {
                 target[propertyKey] = ins.instance;
+                if (!ins.instance) {
+                    throw new Error(`Autowired Cannot find Bean: '${type}'`);
+                }
             }
             else {
                 ins.callback().then(res => {
                     target[propertyKey] = res;
+                    if (!res) {
+                        throw new Error(`Autowired Cannot find Bean: '${type}'`);
+                    }
                 });
             }
         }

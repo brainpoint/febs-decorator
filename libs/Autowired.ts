@@ -28,10 +28,16 @@ export function Autowired(type: Function|string): PropertyDecorator {
     if (ins) {
       if (ins.singleton) {
         (target as any)[propertyKey] = ins.instance;
+        if (!ins.instance) {
+          throw new Error(`Autowired Cannot find Bean: '${type}'`);
+        }
       }
       else {
         ins.callback().then(res => {
           (target as any)[propertyKey] = res;
+          if (!res) {
+            throw new Error(`Autowired Cannot find Bean: '${type}'`);
+          }
         });
       }
     }

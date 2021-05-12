@@ -82,6 +82,10 @@ function setupBeans() {
             }
         }
         waitBeans.length = 0;
+        let autos = getGlobalWaitAutowireds();
+        if (autos.length > 0) {
+            throw new Error(`Autowired Cannot find Bean: '${autos[0].type}'`);
+        }
         global[FinishDelay] = true;
     });
 }
@@ -121,7 +125,7 @@ function Service(...args) {
             if (singleton) {
                 let instance = new target();
                 instances[key] = { singleton, instance };
-                finishAutowired(key);
+                finishAutowired(key).then(() => { });
             }
             else {
                 let callback = () => __awaiter(this, void 0, void 0, function* () {
@@ -130,7 +134,7 @@ function Service(...args) {
                 instances[key] = {
                     singleton, callback
                 };
-                finishAutowired(key);
+                finishAutowired(key).then(() => { });
             }
         }
         else {
@@ -168,7 +172,7 @@ function ImmediatelyService(...args) {
         if (singleton) {
             let instance = new target();
             instances[key] = { singleton, instance };
-            finishAutowired(key);
+            finishAutowired(key).then(() => { });
         }
         else {
             let callback = () => __awaiter(this, void 0, void 0, function* () {
@@ -177,7 +181,7 @@ function ImmediatelyService(...args) {
             instances[key] = {
                 singleton, callback
             };
-            finishAutowired(key);
+            finishAutowired(key).then(() => { });
         }
     };
 }
@@ -212,14 +216,14 @@ function Bean(...args) {
             if (singleton) {
                 callback().then(res => {
                     instances[key] = { singleton, instance: res };
-                    finishAutowired(key);
+                    finishAutowired(key).then(() => { });
                 });
             }
             else {
                 instances[key] = {
                     singleton, callback
                 };
-                finishAutowired(key);
+                finishAutowired(key).then(() => { });
             }
         }
         else {
@@ -235,20 +239,25 @@ function Bean(...args) {
 exports.Bean = Bean;
 function finishAutowired(key) {
     return __awaiter(this, void 0, void 0, function* () {
-        let autos = getGlobalWaitAutowireds();
         let instance = getServiceInstances(key);
         if (!instance) {
-            return;
+            throw new Error(`Autowired Cannot find Bean : '${key}'`);
         }
+        let autos = getGlobalWaitAutowireds();
         for (let i = 0; i < autos.length; i++) {
             const element = autos[i];
             if (element && element.type === key) {
+                let instance1;
                 if (instance.singleton) {
-                    element.target[element.propertyKey] = instance.instance;
+                    instance1 = instance.instance;
                 }
                 else {
-                    element.target[element.propertyKey] = yield instance.callback();
+                    instance1 = yield instance.callback();
                 }
+                if (!instance1) {
+                    throw new Error(`Autowired Cannot find Bean: '${key}'`);
+                }
+                element.target[element.propertyKey] = instance1;
                 autos.splice(i, 1);
                 i--;
             }

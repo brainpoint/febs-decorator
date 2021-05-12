@@ -92,6 +92,12 @@ export async function setupBeans(): Promise<void> {
   }
   waitBeans.length = 0;
 
+  // 查看是否有未加载bean.
+  let autos = getGlobalWaitAutowireds();
+  if (autos.length > 0) {
+    throw new Error(`Autowired Cannot find Bean: '${autos[0].type}'`);
+  }
+
   (global as any)[FinishDelay] = true;
 }
 
@@ -158,7 +164,7 @@ export function Service(...args: any[]): ClassDecorator {
       if (singleton) {
         let instance = new (target as any)();
         instances[key] = { singleton, instance };
-        finishAutowired(key);
+        finishAutowired(key).then(() => { });
       }
       else {
         let callback = async (): Promise<any> => {
@@ -167,7 +173,7 @@ export function Service(...args: any[]): ClassDecorator {
         instances[key] = {
           singleton, callback
         };
-        finishAutowired(key);
+        finishAutowired(key).then(() => { });
       }
     }
     else {
@@ -215,7 +221,7 @@ export function ImmediatelyService(...args: any[]): ClassDecorator {
     if (singleton) {
       let instance = new (target as any)();
       instances[key] = {singleton, instance};
-      finishAutowired(key);
+      finishAutowired(key).then(() => { });
     }
     else {
       let callback = async (): Promise<any> => {
@@ -224,7 +230,7 @@ export function ImmediatelyService(...args: any[]): ClassDecorator {
       instances[key] = {
         singleton, callback
       };
-      finishAutowired(key);
+      finishAutowired(key).then(() => { });
     }
   }
 }
@@ -292,14 +298,14 @@ export function Bean(...args:any[]): MethodDecorator {
       if (singleton) {
         callback().then(res => {
           instances[key] = { singleton, instance: res };
-          finishAutowired(key);
+          finishAutowired(key).then(() => { });
         });
       }
       else {
         instances[key] = {
           singleton, callback
         };
-        finishAutowired(key);
+        finishAutowired(key).then(() => { });
       }
     }
     else {
@@ -318,21 +324,29 @@ export function Bean(...args:any[]): MethodDecorator {
 * @desc: 完成装配.
 */
 async function finishAutowired(key: any) {
-  let autos = getGlobalWaitAutowireds();
   let instance = getServiceInstances(key);
   if (!instance) {
-    return;
+    throw new Error(`Autowired Cannot find Bean : '${key}'`);
   }
+
+  let autos = getGlobalWaitAutowireds();
 
   for (let i = 0; i < autos.length; i++) {
     const element = autos[i];
     if (element && element.type === key) {
+      let instance1;
       if (instance.singleton) {
-        element.target[element.propertyKey] = instance.instance;
+        instance1 = instance.instance;
       }
       else {
-        element.target[element.propertyKey] = await instance.callback();
+        instance1 = await instance.callback();
       }
+
+      if (!instance1) {
+        throw new Error(`Autowired Cannot find Bean: '${key}'`);
+      } 
+
+      element.target[element.propertyKey] = instance1;
       autos.splice(i, 1);
       i--;
     }
