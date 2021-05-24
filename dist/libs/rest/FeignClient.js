@@ -15,6 +15,7 @@ const febs = require("febs-browser");
 const logger_1 = require("../logger");
 const urlUtils_1 = require("../utils/urlUtils");
 const objectUtils_1 = require("../utils/objectUtils");
+const paramUtils_1 = require("../utils/paramUtils");
 var qs = require('../utils/qs/dist');
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg');
 exports._FeignClientMetadataKey = Symbol('_FeignClientMetadataKey');
@@ -96,11 +97,12 @@ function _FeignClientDo(target, requestMapping, restObject, castType, args, fall
         let response;
         let responseMsg;
         let lastError;
+        let cfgurl = paramUtils_1.getLazyParameterValue(meta.url);
         for (let i = 0; i < feignClientCfg.maxAutoRetriesNextServer; i++) {
             let uri;
             let uriPathname = url;
-            if (!febs.string.isEmpty(meta.url) && __debugFeignClient) {
-                uri = urlUtils_1.default.join(meta.url, url);
+            if (!febs.string.isEmpty(cfgurl) && __debugFeignClient) {
+                uri = urlUtils_1.default.join(cfgurl, url);
             }
             else {
                 let host;

@@ -13,6 +13,8 @@ import { Fetch } from 'febs-browser/types/fetch.d'
 import { logError, logFeignClient, RestLogLevel, setFeignLoggerLevel } from '../logger'
 import urlUtils from '../utils/urlUtils'
 import objectUtils from '../utils/objectUtils'
+import { StringLazyParameter } from '../../types/lazyParameter.d'
+import { getLazyParameterValue } from '../utils/paramUtils'
 var qs = require('../utils/qs/dist')
 
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg')
@@ -20,7 +22,7 @@ export const _FeignClientMetadataKey = Symbol('_FeignClientMetadataKey')
 
 type _FeignClientMetadataType = {
   name: string
-  url: string
+  url: StringLazyParameter
   path: string
 }
 
@@ -146,10 +148,11 @@ export function FeignClient(cfg: {
   /** 指定微服务的名称 */
   name: string
   /** 用于调试, 指定调用的地址, 使用此地址通信. (必须设置 __debugFeignClient = true 才能生效) */
-  url?: string
+  url?: StringLazyParameter
   /** 定义FeignClient类中请求的统一前缀 */
   path?: string
 }): ClassDecorator {
+
   if (febs.string.isEmpty(cfg.name)) {
     throw new Error(
       "@FeignClient need 'name' parameter")
@@ -200,14 +203,16 @@ export async function _FeignClientDo(
   let responseMsg: any;
   let lastError: any;
 
+  let cfgurl = getLazyParameterValue(meta.url);
+
   // net request.
   for (let i = 0; i < feignClientCfg.maxAutoRetriesNextServer; i++) {
 
     let uri;
     let uriPathname = url;
 
-    if (!febs.string.isEmpty(meta.url) && __debugFeignClient) {
-      uri = urlUtils.join(meta.url, url);
+    if (!febs.string.isEmpty(cfgurl) && __debugFeignClient) {
+      uri = urlUtils.join(cfgurl, url);
     }
     else {
       let host: MicroserviceInfo;

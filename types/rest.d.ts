@@ -5,6 +5,7 @@
 import { RestLogLevel } from './logger';
 import * as Rest from './rest_request.d';
 import * as fetch from 'febs-browser/types/fetch.d';
+import { StringLazyParameter, LazyParameter } from './lazyParameter.d';
 
 /**
  * @desc 表明指定的类为feignClient类.
@@ -17,7 +18,7 @@ export function FeignClient(cfg: {
   /** 指定微服务的名称 */
   name: string
   /** 用于调试, 指定调用的地址, 使用此地址通信. (必须设置 __debugFeignClient = true 才能生效) */
-  url?: string
+  url?: StringLazyParameter
   /** 定义FeignClient类中请求的统一前缀 */
   path?: string
 }): ClassDecorator;
@@ -142,7 +143,7 @@ export function PostMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: Rest.Headers | (()=>Rest.Headers),
+  headers?: LazyParameter<Rest.Headers>,
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -160,7 +161,7 @@ export function PutMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: Rest.Headers | (()=>Rest.Headers),
+  headers?: LazyParameter<Rest.Headers>,
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -178,7 +179,7 @@ export function PatchMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: Rest.Headers | (()=>Rest.Headers),
+  headers?: LazyParameter<Rest.Headers>,
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -196,7 +197,7 @@ export function GetMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: Rest.Headers | (()=>Rest.Headers),
+  headers?: LazyParameter<Rest.Headers>,
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -214,7 +215,7 @@ export function DeleteMapping(cfg: {
   /** 指定请求的路径; 如果需要使用?后querystring参数, 请使用 RequestParam */
   path: string | string[],
   /** 附加的header; (请求或响应的header) */
-  headers?: Rest.Headers | (()=>Rest.Headers),
+  headers?: LazyParameter<Rest.Headers>,
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string|'no-cors'|'cors'|'same-origin',
@@ -234,7 +235,7 @@ export function RequestMapping(cfg: {
   /** 默认为 GET */
   method?: RequestMethod,
   /** 附加的header; (请求或响应的header, 可使用Headers对象或回调方法获取headers) */
-  headers?: Rest.Headers | (()=>Rest.Headers),
+  headers?: LazyParameter<Rest.Headers>,
   /** 超时 (ms), 默认为5000 */
   timeout?: number,
   mode?: string | 'no-cors' | 'cors' | 'same-origin',
