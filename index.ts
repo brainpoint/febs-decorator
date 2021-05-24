@@ -7,6 +7,21 @@
 * Desc: 
 */
 
+
+//
+// define the __debugFeignClient.
+if (!global.hasOwnProperty('__debugFeignClient')) {
+  Object.defineProperty(global, '__debugFeignClient', {
+   get: function() {
+      return !!(<any>global).__debugFeignClient;
+   },
+   set: function(isDebug) {
+     (<any>global).__debugFeignClient = isDebug;
+   }
+  });
+}
+
+
 export * from './libs/Service';
 export * from './libs/Autowired';
 export * from './libs/validator';

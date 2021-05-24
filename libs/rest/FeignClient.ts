@@ -8,7 +8,6 @@
  */
 
 import 'reflect-metadata'
-import * as path from 'path'
 import * as febs from 'febs-browser'
 import { Fetch } from 'febs-browser/types/fetch.d'
 import { logError, logFeignClient, RestLogLevel, setFeignLoggerLevel } from '../logger'
@@ -17,8 +16,8 @@ import objectUtils from '../utils/objectUtils'
 var qs = require('../utils/qs/dist')
 
 const DefaultFeignClientCfg = Symbol('DefaultFeignClientCfg')
-
 export const _FeignClientMetadataKey = Symbol('_FeignClientMetadataKey')
+
 type _FeignClientMetadataType = {
   name: string
   url: string
@@ -146,7 +145,7 @@ export function getFeignClientDefaultCfg(): {
 export function FeignClient(cfg: {
   /** 指定微服务的名称 */
   name: string
-  /** 用于调试, 指定调用的地址, 使用此地址通信. */
+  /** 用于调试, 指定调用的地址, 使用此地址通信. (必须设置 __debugFeignClient = true 才能生效) */
   url?: string
   /** 定义FeignClient类中请求的统一前缀 */
   path?: string
@@ -206,7 +205,11 @@ export async function _FeignClientDo(
 
     let uri;
     let uriPathname = url;
-    if (febs.string.isEmpty(meta.url)) {
+
+    if (!febs.string.isEmpty(meta.url) && __debugFeignClient) {
+      uri = urlUtils.join(meta.url, url);
+    }
+    else {
       let host: MicroserviceInfo;
       try {
         host = await feignClientCfg.findServiceCallback(meta.name, excludeHost);
@@ -229,9 +232,6 @@ export async function _FeignClientDo(
         if (uri[0] == '/') uri = 'http:/' + uri;
         else uri = 'http://' + uri;
       }
-    }
-    else {
-      uri = urlUtils.join(meta.url, url);
     }
 
     request = {

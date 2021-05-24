@@ -99,7 +99,10 @@ function _FeignClientDo(target, requestMapping, restObject, castType, args, fall
         for (let i = 0; i < feignClientCfg.maxAutoRetriesNextServer; i++) {
             let uri;
             let uriPathname = url;
-            if (febs.string.isEmpty(meta.url)) {
+            if (!febs.string.isEmpty(meta.url) && __debugFeignClient) {
+                uri = urlUtils_1.default.join(meta.url, url);
+            }
+            else {
                 let host;
                 try {
                     host = yield feignClientCfg.findServiceCallback(meta.name, excludeHost);
@@ -126,9 +129,6 @@ function _FeignClientDo(target, requestMapping, restObject, castType, args, fall
                     else
                         uri = 'http://' + uri;
                 }
-            }
-            else {
-                uri = urlUtils_1.default.join(meta.url, url);
             }
             request = {
                 method: requestMapping.method.toString(),

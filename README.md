@@ -89,11 +89,15 @@ let result:BeanDemo = new BaseService().request();
 
 ## Reference
 
-### [Validator Decorator](./libs/validator/readme.md)
+### Validator Decorator
+
+see [readme](./libs/validator/readme.md)
 
 A set of validator decorators, e.g. `@NotNull`, `@Max`, `@Min`, `@Range` ..
 
-### [Rest Decorator](./libs/rest/readme.md)
+### Rest Decorator
+
+see [readme](./libs/rest/readme.md)
 
 A set of restful api decorators, e.g. `@RestController`, `@FeignClient`, `@RequestMapping`, `@RequestBody`, `@PathVariable` ..
 

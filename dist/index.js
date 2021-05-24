@@ -10,6 +10,16 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+if (!global.hasOwnProperty('__debugFeignClient')) {
+    Object.defineProperty(global, '__debugFeignClient', {
+        get: function () {
+            return !!global.__debugFeignClient;
+        },
+        set: function (isDebug) {
+            global.__debugFeignClient = isDebug;
+        }
+    });
+}
 __exportStar(require("./libs/Service"), exports);
 __exportStar(require("./libs/Autowired"), exports);
 __exportStar(require("./libs/validator"), exports);
