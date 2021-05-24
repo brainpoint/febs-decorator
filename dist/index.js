@@ -10,13 +10,14 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const debugFeignClientValue = Symbol('debugFeignClientValue');
 if (!global.hasOwnProperty('__debugFeignClient')) {
     Object.defineProperty(global, '__debugFeignClient', {
         get: function () {
-            return !!global.__debugFeignClient;
+            return !!global[debugFeignClientValue];
         },
         set: function (isDebug) {
-            global.__debugFeignClient = isDebug;
+            global[debugFeignClientValue] = isDebug;
         }
     });
 }

@@ -5,6 +5,7 @@ export * from './rest.d';
 export * from './rest_request.d';
 export * from './service.d';
 export * from './validation.d';
+export * from './lazyParameter.d';
 
 
 declare global {

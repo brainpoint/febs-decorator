@@ -7,16 +7,17 @@
 * Desc: 
 */
 
+const debugFeignClientValue = Symbol('debugFeignClientValue');
 
 //
 // define the __debugFeignClient.
 if (!global.hasOwnProperty('__debugFeignClient')) {
   Object.defineProperty(global, '__debugFeignClient', {
    get: function() {
-      return !!(<any>global).__debugFeignClient;
+      return !!(<any>global)[debugFeignClientValue];
    },
    set: function(isDebug) {
-     (<any>global).__debugFeignClient = isDebug;
+     (<any>global)[debugFeignClientValue] = isDebug;
    }
   });
 }
