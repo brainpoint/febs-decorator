@@ -135,11 +135,23 @@ export function RestController(cfg?: {
         let pps = pp.split('/');
         pp = '';
         for (let i = 0; i < pps.length; i++) {
+          let ppsi = pps[i];
+          
           if (pp.length > 0 && pp[pp.length - 1] != '/') {
             pp += '/';
           }
-          if (pps[i].length != 0) {
-            pp += encodeURIComponent(pps[i]);
+          if (ppsi.length != 0) {
+            if (ppsi.length > 2) {
+              if (ppsi[0] == '{' && ppsi[ppsi.length - 1] == '}') {
+                pp += ppsi;
+              }
+              else {
+                pp += encodeURIComponent(ppsi);
+              }
+            }
+            else {
+              pp += encodeURIComponent(ppsi);
+            }
           }
           else if (pp.length == 0) {
             pp += '/';
