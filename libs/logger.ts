@@ -99,26 +99,31 @@ export function logRest(
   const logger: Logger = (global as any)[FEBS_DECORATOR_LOGGER_INSTANCE] || DefaultLogger;
   const logLevel: RestLogLevel = (global as any)[FEBS_DECORATOR_LOG_LEVEL] || RestLogLevel.BASIC;
 
-  // none.
-  if (logLevel == RestLogLevel.NONE) {
-    return;
-  }
-  // basic.
-  else if (logLevel == RestLogLevel.BASIC) {
-    logger.info(logBasic('[RestController]', request.ip, request, response, interval, null));
-  }
-  // headers.
-  else if (logLevel == RestLogLevel.HEADERS) {
-    logger.info(logHeaders('[RestController]', request.ip, request, response, interval, null));    
-  }
-  // full.
-  if (logLevel == RestLogLevel.FULL) {
-
-    if (response && response.body) {
-      response = febs.utils.mergeMap(response, { body: getErrorMessage(response.body) });
+  try {
+    // none.
+    if (logLevel == RestLogLevel.NONE) {
+      return;
     }
+    // basic.
+    else if (logLevel == RestLogLevel.BASIC) {
+      logger.info(logBasic('[RestController]', request.ip, request, response, interval, null));
+    }
+    // headers.
+    else if (logLevel == RestLogLevel.HEADERS) {
+      logger.info(logHeaders('[RestController]', request.ip, request, response, interval, null));    
+    }
+    // full.
+    if (logLevel == RestLogLevel.FULL) {
 
-    logger.info(logFull('[RestController]', request.ip, request, response, interval));
+      if (response && response.body) {
+        response = febs.utils.mergeMap(response, { body: getErrorMessage(response.body) });
+      }
+
+      logger.info(logFull('[RestController]', request.ip, request, response, interval));
+    }
+  } catch (e) {
+    console.error('logFeignClient error');
+    console.error(e);
   }
 }
 
@@ -138,21 +143,26 @@ export function logFeignClient(
   const logger: Logger = (global as any)[FEBS_DECORATOR_LOGGER_INSTANCE] || DefaultLogger;
   const logLevel: RestLogLevel = (global as any)[FEBS_DECORATOR_LOG_LEVEL_FEIGN] || RestLogLevel.BASIC;
 
-  // none.
-  if (logLevel == RestLogLevel.NONE) {
-    return;
-  }
-  // basic.
-  else if (logLevel == RestLogLevel.BASIC) {
-    logger.info(logBasic('[FeignClient]', '0.0.0.0', request, response, interval, null));
-  }
-  // headers.
-  else if (logLevel == RestLogLevel.HEADERS) {
-    logger.info(logHeaders('[FeignClient]', '0.0.0.0', request, response, interval, null));    
-  }
-  // full.
-  else if (logLevel == RestLogLevel.FULL) {
-    logger.info(logFull('[FeignClient]', '0.0.0.0', request, response, interval));
+  try {
+    // none.
+    if (logLevel == RestLogLevel.NONE) {
+      return;
+    }
+    // basic.
+    else if (logLevel == RestLogLevel.BASIC) {
+      logger.info(logBasic('[FeignClient]', '0.0.0.0', request, response, interval, null));
+    }
+    // headers.
+    else if (logLevel == RestLogLevel.HEADERS) {
+      logger.info(logHeaders('[FeignClient]', '0.0.0.0', request, response, interval, null));
+    }
+    // full.
+    else if (logLevel == RestLogLevel.FULL) {
+      logger.info(logFull('[FeignClient]', '0.0.0.0', request, response, interval));
+    }
+  } catch (e) {
+    console.error('logFeignClient error');
+    console.error(e);
   }
 }
 
@@ -194,7 +204,7 @@ function logHeaders(prefix:string, ip:string, request: any, response: any, inter
 
   // response headers.
   if (response.headers) {
-    if (response.headers instanceof Map) {
+    if (typeof response.headers.forEach === 'function') {
       response.headers.forEach(function (val: any, key: string) {
         if (!Array.isArray(val)) val = [val];
         for (let i = 0; i < val.length; i++) {

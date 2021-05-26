@@ -172,7 +172,7 @@ import { FeignClient } from "febs-decorator";
 @FeignClient({
   /** 指定微服务的名称 */
   name: string
-  /** 用于调试, 指定调用的地址, 使用此地址通信. */
+  /** 用于调试, 指定调用的地址, 使用此地址通信. (__debugFeignClient=true时生效) */
   url?: string
   /** 定义FeignClient类中请求的统一前缀 */
   path?: string
