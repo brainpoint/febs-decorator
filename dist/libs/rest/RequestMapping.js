@@ -158,7 +158,7 @@ function setPathVariables(urlPaths, pathVariables) {
             let match = false;
             for (let j in urls) {
                 if (urls[j] == '{' + vari + '}') {
-                    urls[j] = pathVariables[vari];
+                    urls[j] = encodeURIComponent(pathVariables[vari]);
                     match = true;
                     break;
                 }

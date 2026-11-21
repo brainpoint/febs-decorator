@@ -330,7 +330,8 @@ function setPathVariables(urlPaths: string[], pathVariables:{ [key: string]: str
       let match: boolean = false;
       for (let j in urls) {
         if (urls[j] == '{' + vari + '}') {
-          urls[j] = pathVariables[vari];
+          // 安全: 路径变量必须编码, 否则 ../ 或 ? 会造成请求路径穿越/查询参数注入.
+          urls[j] = encodeURIComponent(pathVariables[vari]);
           match = true;
           break;
         }

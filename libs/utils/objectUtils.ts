@@ -95,8 +95,14 @@ function castType(content: any, castType: any, contentIsRaw: boolean): { data?: 
       if (contentIsRaw) {
         content = qs.parse(content);
       }
-      for (const key in content) {
-        data[key] = content[key];
+      // 安全: 仅拷贝自有属性, 且跳过 __proto__/constructor/prototype, 防止原型污染与批量赋值.
+      if (content && typeof content === 'object') {
+        for (const key of Object.keys(content)) {
+          if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+            continue;
+          }
+          data[key] = content[key];
+        }
       }
     } // if..else.
     return { data };

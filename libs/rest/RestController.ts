@@ -199,7 +199,7 @@ export async function CallRestControllerRoute(
   if (qsPos >= 0) {
     querystring = pathname.substr(qsPos + 1);
     if (!febs.string.isEmpty(querystring)) {
-      querystring = decodeURIComponent(querystring);
+      // 安全: 不能对整个查询串预解码, 否则 %26/%3D 会变成 &/= 从而注入额外参数; qs 会逐字段解码.
       querystring = qs.parse(querystring);
     }
     pathname = pathname.substr(0, qsPos);

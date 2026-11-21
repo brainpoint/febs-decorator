@@ -61,8 +61,13 @@ function castType(content, castType, contentIsRaw) {
             if (contentIsRaw) {
                 content = qs.parse(content);
             }
-            for (const key in content) {
-                data[key] = content[key];
+            if (content && typeof content === 'object') {
+                for (const key of Object.keys(content)) {
+                    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+                        continue;
+                    }
+                    data[key] = content[key];
+                }
             }
         }
         return { data };
